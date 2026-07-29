@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedTrainerIndexRouteImport } from './routes/_authenticated/trainer.index'
+import { Route as AuthenticatedTrainerAttemptIdRouteImport } from './routes/_authenticated/trainer.$attemptId'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -46,12 +47,19 @@ const AuthenticatedTrainerIndexRoute =
     path: '/trainer/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTrainerAttemptIdRoute =
+  AuthenticatedTrainerAttemptIdRouteImport.update({
+    id: '/trainer/$attemptId',
+    path: '/trainer/$attemptId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/trainer/$attemptId': typeof AuthenticatedTrainerAttemptIdRoute
   '/trainer/': typeof AuthenticatedTrainerIndexRoute
 }
 export interface FileRoutesByTo {
@@ -59,6 +67,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/trainer/$attemptId': typeof AuthenticatedTrainerAttemptIdRoute
   '/trainer': typeof AuthenticatedTrainerIndexRoute
 }
 export interface FileRoutesById {
@@ -68,13 +77,26 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/trainer/$attemptId': typeof AuthenticatedTrainerAttemptIdRoute
   '/_authenticated/trainer/': typeof AuthenticatedTrainerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/reset-password' | '/dashboard' | '/trainer/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/dashboard'
+    | '/trainer/$attemptId'
+    | '/trainer/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/dashboard' | '/trainer'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/dashboard'
+    | '/trainer/$attemptId'
+    | '/trainer'
   id:
     | '__root__'
     | '/'
@@ -82,6 +104,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/dashboard'
+    | '/_authenticated/trainer/$attemptId'
     | '/_authenticated/trainer/'
   fileRoutesById: FileRoutesById
 }
@@ -136,16 +159,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTrainerIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/trainer/$attemptId': {
+      id: '/_authenticated/trainer/$attemptId'
+      path: '/trainer/$attemptId'
+      fullPath: '/trainer/$attemptId'
+      preLoaderRoute: typeof AuthenticatedTrainerAttemptIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedTrainerAttemptIdRoute: typeof AuthenticatedTrainerAttemptIdRoute
   AuthenticatedTrainerIndexRoute: typeof AuthenticatedTrainerIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedTrainerAttemptIdRoute: AuthenticatedTrainerAttemptIdRoute,
   AuthenticatedTrainerIndexRoute: AuthenticatedTrainerIndexRoute,
 }
 
