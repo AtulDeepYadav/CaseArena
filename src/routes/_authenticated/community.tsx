@@ -102,16 +102,12 @@ function CommunityPage() {
     toast.success("Bookmarked");
   };
 
-  const download = async (path: string | null, name: string | null, id: string) => {
+  const download = async (path: string | null, name: string | null) => {
     if (!path) return toast.error("No file attached");
     const { data, error } = await supabase.storage.from("repository").createSignedUrl(path, 60, {
       download: name ?? true,
     });
     if (error || !data) return toast.error(error?.message ?? "Download failed");
-    await supabase.rpc("increment_download", { _file_id: id }).then(
-      () => undefined,
-      () => undefined,
-    );
     window.open(data.signedUrl, "_blank", "noopener");
   };
 
@@ -195,7 +191,7 @@ function CommunityPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => download(f.storage_path, f.file_name, f.id)}
+                  onClick={() => download(f.storage_path, f.file_name)}
                 >
                   <Download className="h-4 w-4" />
                 </Button>
