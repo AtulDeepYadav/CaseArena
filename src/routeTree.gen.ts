@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRepositoryRouteImport } from './routes/_authenticated/repository'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedTrainerIndexRouteImport } from './routes/_authenticated/trainer.index'
 import { Route as AuthenticatedTrainerAttemptIdRouteImport } from './routes/_authenticated/trainer.$attemptId'
@@ -35,6 +36,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRepositoryRoute = AuthenticatedRepositoryRouteImport.update({
+  id: '/repository',
+  path: '/repository',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/repository': typeof AuthenticatedRepositoryRoute
   '/trainer/$attemptId': typeof AuthenticatedTrainerAttemptIdRoute
   '/trainer/': typeof AuthenticatedTrainerIndexRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/repository': typeof AuthenticatedRepositoryRoute
   '/trainer/$attemptId': typeof AuthenticatedTrainerAttemptIdRoute
   '/trainer': typeof AuthenticatedTrainerIndexRoute
 }
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/repository': typeof AuthenticatedRepositoryRoute
   '/_authenticated/trainer/$attemptId': typeof AuthenticatedTrainerAttemptIdRoute
   '/_authenticated/trainer/': typeof AuthenticatedTrainerIndexRoute
 }
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/dashboard'
+    | '/repository'
     | '/trainer/$attemptId'
     | '/trainer/'
   fileRoutesByTo: FileRoutesByTo
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/dashboard'
+    | '/repository'
     | '/trainer/$attemptId'
     | '/trainer'
   id:
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/dashboard'
+    | '/_authenticated/repository'
     | '/_authenticated/trainer/$attemptId'
     | '/_authenticated/trainer/'
   fileRoutesById: FileRoutesById
@@ -145,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/repository': {
+      id: '/_authenticated/repository'
+      path: '/repository'
+      fullPath: '/repository'
+      preLoaderRoute: typeof AuthenticatedRepositoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -171,12 +190,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedRepositoryRoute: typeof AuthenticatedRepositoryRoute
   AuthenticatedTrainerAttemptIdRoute: typeof AuthenticatedTrainerAttemptIdRoute
   AuthenticatedTrainerIndexRoute: typeof AuthenticatedTrainerIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedRepositoryRoute: AuthenticatedRepositoryRoute,
   AuthenticatedTrainerAttemptIdRoute: AuthenticatedTrainerAttemptIdRoute,
   AuthenticatedTrainerIndexRoute: AuthenticatedTrainerIndexRoute,
 }
