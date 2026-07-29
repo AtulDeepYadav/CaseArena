@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "AI case trainer, shared case repository and live multiplayer prep sessions for MBA interview preparation.",
+          "Practice consulting and product management cases with an AI trainer, share a curated case repository, and run live group prep sessions.",
       },
     ],
   }),

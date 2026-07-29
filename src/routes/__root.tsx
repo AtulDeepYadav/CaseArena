@@ -81,14 +81,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CaseForge — MBA Case Prep Portal" },
+      { title: "CaseForge — IIM Lucknow Case Preparation Portal" },
       {
         name: "description",
         content:
-          "CaseForge is the IIM Lucknow case preparation portal: AI case trainer, shared repository and live group prep sessions.",
+          "Practice consulting and product management cases with an AI trainer, share a curated case repository, and run live group prep sessions.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "CaseForge — IIM Lucknow Case Preparation Portal" },
+      { name: "twitter:title", content: "CaseForge — IIM Lucknow Case Preparation Portal" },
+      { property: "og:description", content: "Practice consulting and product management cases with an AI trainer, share a curated case repository, and run live group prep sessions." },
+      { name: "twitter:description", content: "Practice consulting and product management cases with an AI trainer, share a curated case repository, and run live group prep sessions." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35ee7725-53e6-46c4-a08c-ba4ce6f0f0a4/id-preview-d728c047--640d992e-3749-497f-b194-bfac6ecb4569.lovable.app-1785314506032.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/35ee7725-53e6-46c4-a08c-ba4ce6f0f0a4/id-preview-d728c047--640d992e-3749-497f-b194-bfac6ecb4569.lovable.app-1785314506032.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
