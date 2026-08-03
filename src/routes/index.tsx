@@ -51,7 +51,7 @@ function Landing() {
       <header className="sticky top-0 z-40">
         <div className="mx-auto mt-4 flex w-[min(1100px,92vw)] items-center justify-between rounded-2xl glass px-4 py-3">
           <span className="font-display text-lg font-bold tracking-tight">
-            Case<span className="text-gradient">Forge</span>
+            Case<span className="text-gradient">Arena</span>
           </span>
           <div className="flex items-center gap-2">
             <ThemeToggle />

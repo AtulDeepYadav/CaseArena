@@ -120,7 +120,7 @@ function AuthPage() {
         className="w-full max-w-md rounded-3xl glass-strong p-8"
       >
         <Link to="/" className="font-display text-lg font-bold">
-          Case<span className="text-gradient">Forge</span>
+          Case<span className="text-gradient">Arena</span>
         </Link>
 
         {sent ? (
