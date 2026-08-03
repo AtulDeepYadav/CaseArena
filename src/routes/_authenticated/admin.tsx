@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/page-header";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Console — CaseForge" },
+      { title: "Admin Console — CaseArena" },
       { name: "description", content: "Moderation and platform administration." },
-      { property: "og:title", content: "Admin Console — CaseForge" },
+      { property: "og:title", content: "Admin Console — CaseArena" },
       { property: "og:description", content: "Moderation and platform administration." },
     ],
   }),

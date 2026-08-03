@@ -41,9 +41,9 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/_authenticated/repository")({
   head: () => ({
     meta: [
-      { title: "Repository — CaseForge" },
+      { title: "Repository — CaseArena" },
       { name: "description", content: "Organise your case notes, frameworks and interview transcripts." },
-      { property: "og:title", content: "Repository — CaseForge" },
+      { property: "og:title", content: "Repository — CaseArena" },
       { property: "og:description", content: "Private folders, uploads and shareable case material." },
     ],
   }),

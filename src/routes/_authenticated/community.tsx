@@ -28,9 +28,9 @@ import { useAuth } from "@/hooks/use-auth";
 export const Route = createFileRoute("/_authenticated/community")({
   head: () => ({
     meta: [
-      { title: "Community Repository — CaseForge" },
+      { title: "Community Repository — CaseArena" },
       { name: "description", content: "Discover case notes and frameworks shared by the IIM Lucknow cohort." },
-      { property: "og:title", content: "Community Repository — CaseForge" },
+      { property: "og:title", content: "Community Repository — CaseArena" },
       { property: "og:description", content: "Browse, rate and discuss shared case prep material." },
     ],
   }),

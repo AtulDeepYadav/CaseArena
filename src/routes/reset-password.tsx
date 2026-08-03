@@ -10,10 +10,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Set a new password — CaseForge" },
-      { name: "description", content: "Choose a new password for your CaseForge account." },
-      { property: "og:title", content: "Set a new password — CaseForge" },
-      { property: "og:description", content: "Choose a new password for your CaseForge account." },
+      { title: "Set a new password — CaseArena" },
+      { name: "description", content: "Choose a new password for your CaseArena account." },
+      { property: "og:title", content: "Set a new password — CaseArena" },
+      { property: "og:description", content: "Choose a new password for your CaseArena account." },
     ],
   }),
   component: ResetPassword,
@@ -40,7 +40,7 @@ function ResetPassword() {
       <form onSubmit={submit} className="w-full max-w-md rounded-3xl glass-strong p-8">
         <h1 className="text-2xl font-bold">Set a new password</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Enter a new password for your CaseForge account.
+          Enter a new password for your CaseArena account.
         </p>
         <div className="mt-6 space-y-1.5">
           <Label htmlFor="new-password">New password</Label>

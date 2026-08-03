@@ -8,13 +8,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CaseForge — IIM Lucknow Case Preparation Portal" },
+      { title: "CaseArena — IIM Lucknow Case Preparation Portal" },
       {
         name: "description",
         content:
           "Practice consulting and product management cases with an AI trainer, share a curated case repository, and run live group prep sessions.",
       },
-      { property: "og:title", content: "CaseForge — IIM Lucknow Case Preparation Portal" },
+      { property: "og:title", content: "CaseArena — IIM Lucknow Case Preparation Portal" },
       {
         property: "og:description",
         content:
@@ -113,7 +113,7 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-        CaseForge · IIM Lucknow Case Preparation Portal
+        CaseArena · IIM Lucknow Case Preparation Portal
       </footer>
     </div>
   );
