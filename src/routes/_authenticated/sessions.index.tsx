@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/page-header";
 export const Route = createFileRoute("/_authenticated/sessions/")({
   head: () => ({
     meta: [
-      { title: "Join Sessions — CaseForge" },
+      { title: "Join Sessions — CaseArena" },
       { name: "description", content: "Browse and book upcoming group prep sessions." },
-      { property: "og:title", content: "Join Sessions — CaseForge" },
+      { property: "og:title", content: "Join Sessions — CaseArena" },
       { property: "og:description", content: "Browse and book upcoming group prep sessions." },
     ],
   }),

@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/page-header";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — CaseForge" },
+      { title: "Settings — CaseArena" },
       { name: "description", content: "Manage account preferences and notifications." },
-      { property: "og:title", content: "Settings — CaseForge" },
+      { property: "og:title", content: "Settings — CaseArena" },
       { property: "og:description", content: "Manage account preferences and notifications." },
     ],
   }),

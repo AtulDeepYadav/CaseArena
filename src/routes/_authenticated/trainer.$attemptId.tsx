@@ -27,9 +27,9 @@ import { evaluateAttempt } from "@/lib/ai.functions";
 export const Route = createFileRoute("/_authenticated/trainer/$attemptId")({
   head: () => ({
     meta: [
-      { title: "Case attempt — CaseForge" },
+      { title: "Case attempt — CaseArena" },
       { name: "description", content: "Solve your AI-generated case and review scored feedback." },
-      { property: "og:title", content: "Case attempt — CaseForge" },
+      { property: "og:title", content: "Case attempt — CaseArena" },
       { property: "og:description", content: "Timed case solving with structured AI feedback." },
     ],
   }),

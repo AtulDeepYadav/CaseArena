@@ -31,9 +31,9 @@ import { generateCase } from "@/lib/ai.functions";
 export const Route = createFileRoute("/_authenticated/trainer/")({
   head: () => ({
     meta: [
-      { title: "AI Trainer — CaseForge" },
+      { title: "AI Trainer — CaseArena" },
       { name: "description", content: "Generate consulting and product cases and get AI feedback." },
-      { property: "og:title", content: "AI Trainer — CaseForge" },
+      { property: "og:title", content: "AI Trainer — CaseArena" },
       { property: "og:description", content: "Practice timed cases with an AI interviewer and scored feedback." },
     ],
   }),

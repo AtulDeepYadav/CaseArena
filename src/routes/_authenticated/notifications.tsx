@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/page-header";
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — CaseForge" },
+      { title: "Notifications — CaseArena" },
       { name: "description", content: "Updates on sessions, AI feedback and community activity." },
-      { property: "og:title", content: "Notifications — CaseForge" },
+      { property: "og:title", content: "Notifications — CaseArena" },
       { property: "og:description", content: "Updates on sessions, AI feedback and community activity." },
     ],
   }),

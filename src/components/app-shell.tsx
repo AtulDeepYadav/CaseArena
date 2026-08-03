@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Sidebar collapsible="icon">
           <SidebarContent className="scrollbar-slim">
             <div className="px-4 py-4 font-display text-base font-bold">
-              Case<span className="text-gradient">Forge</span>
+              Case<span className="text-gradient">Arena</span>
             </div>
             <NavGroup label="Prepare" items={mainNav} pathname={pathname} />
             <NavGroup label="Sessions" items={sessionNav} pathname={pathname} />

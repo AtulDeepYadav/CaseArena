@@ -22,9 +22,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — CaseForge" },
+      { title: "Dashboard — CaseArena" },
       { name: "description", content: "Your case prep streak, sessions, uploads and AI scores." },
-      { property: "og:title", content: "Dashboard — CaseForge" },
+      { property: "og:title", content: "Dashboard — CaseArena" },
       { property: "og:description", content: "Track case practice, sessions and repository activity." },
     ],
   }),

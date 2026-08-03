@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/page-header";
 export const Route = createFileRoute("/_authenticated/leaderboard")({
   head: () => ({
     meta: [
-      { title: "Leaderboard — CaseForge" },
+      { title: "Leaderboard — CaseArena" },
       { name: "description", content: "Top performers across cases, uploads and sessions." },
-      { property: "og:title", content: "Leaderboard — CaseForge" },
+      { property: "og:title", content: "Leaderboard — CaseArena" },
       { property: "og:description", content: "Top performers across cases, uploads and sessions." },
     ],
   }),

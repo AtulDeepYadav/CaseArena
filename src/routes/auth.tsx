@@ -15,9 +15,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — CaseForge" },
-      { name: "description", content: "Sign in or create your CaseForge case prep account." },
-      { property: "og:title", content: "Sign in — CaseForge" },
+      { title: "Sign in — CaseArena" },
+      { name: "description", content: "Sign in or create your CaseArena case prep account." },
+      { property: "og:title", content: "Sign in — CaseArena" },
       { property: "og:description", content: "Access your AI case trainer, repository and prep sessions." },
     ],
   }),
@@ -76,7 +76,7 @@ function AuthPage() {
           setSent("verify");
           return;
         }
-        toast.success("Welcome to CaseForge");
+        toast.success("Welcome to CaseArena");
         navigate({ to: "/dashboard" });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -120,7 +120,7 @@ function AuthPage() {
         className="w-full max-w-md rounded-3xl glass-strong p-8"
       >
         <Link to="/" className="font-display text-lg font-bold">
-          Case<span className="text-gradient">Forge</span>
+          Case<span className="text-gradient">Arena</span>
         </Link>
 
         {sent ? (
@@ -230,7 +230,7 @@ function AuthPage() {
             )}
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              {mode === "signup" ? "Already have an account?" : "New to CaseForge?"}{" "}
+              {mode === "signup" ? "Already have an account?" : "New to CaseArena?"}{" "}
               <button
                 className="font-medium text-primary hover:underline"
                 onClick={() => setMode(mode === "signup" ? "login" : "signup")}

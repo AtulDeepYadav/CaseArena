@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/page-header";
 export const Route = createFileRoute("/_authenticated/bookmarks")({
   head: () => ({
     meta: [
-      { title: "Bookmarks — CaseForge" },
+      { title: "Bookmarks — CaseArena" },
       { name: "description", content: "Saved cases and community files." },
-      { property: "og:title", content: "Bookmarks — CaseForge" },
+      { property: "og:title", content: "Bookmarks — CaseArena" },
       { property: "og:description", content: "Saved cases and community files." },
     ],
   }),
