@@ -165,8 +165,15 @@ function SessionDetailsPage() {
       });
       if (error) throw error;
       toast.success("Joined session successfully!");
-      // UI updates automatically via Postgres changes if channel was active, but we activate it now.
-      window.location.reload(); 
+      
+      // Seamlessly update local state without reloading
+      const { data: userData } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", userId).single();
+      const newParticipant: Participant = {
+        user_id: userId,
+        role: role,
+        profiles: userData || { full_name: "You", avatar_url: "" }
+      };
+      setParticipants(prev => [...prev, newParticipant]); 
     } catch (err) {
       toast.error("Failed to join. Session might be full.");
     } finally {
