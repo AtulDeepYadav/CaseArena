@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Flame, Medal } from "lucide-react";
+import { Trophy, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -67,7 +67,7 @@ function LeaderboardPage() {
 
   const top3 = profiles.slice(0, 3);
   const rest = profiles.slice(3);
-  const myRankIndex = profiles.findIndex((p) => p.id === session?.user.id);
+  const myRankIndex = profiles.findIndex((p) => p.id === session?.user?.id);
   
   // Podium rendering helper
   const renderPodiumPlace = (profile: LeaderboardProfile, rank: number) => {
@@ -91,7 +91,7 @@ function LeaderboardPage() {
           {isFirst && <Trophy className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-8 text-yellow-400 z-10" />}
           <Avatar className={cn("h-20 w-20 ring-4 ring-offset-4 ring-offset-background", ringColor)}>
             <AvatarImage src={profile.avatar_url || ""} />
-            <AvatarFallback>{profile.full_name?.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{profile.full_name?.charAt(0) || "?"}</AvatarFallback>
           </Avatar>
           <div className={cn("absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full px-2 py-0.5 text-xs font-black shadow-lg", badgeColor)}>
             #{rank}
@@ -101,11 +101,11 @@ function LeaderboardPage() {
         <div className={cn("w-28 sm:w-36 rounded-t-2xl glass-strong border-b-0 flex flex-col items-center p-4", height)}>
           <div className="font-bold text-center truncate w-full">{profile.full_name}</div>
           <div className="text-sm font-black text-primary mt-2">{profile.xp} XP</div>
-          {profile.streak > 0 && (
+          {profile.streak > 0 ? (
             <div className="flex items-center gap-1 text-xs text-orange-500 font-bold mt-1">
               <Flame className="h-3 w-3" /> {profile.streak}
             </div>
-          )}
+          ) : null}
         </div>
       </motion.div>
     );
@@ -129,7 +129,7 @@ function LeaderboardPage() {
       <div className="space-y-4">
         {rest.map((profile, idx) => {
           const rank = idx + 4;
-          const isMe = profile.id === session?.user.id;
+          const isMe = profile.id === session?.user?.id;
           
           return (
             <motion.div
@@ -148,7 +148,7 @@ function LeaderboardPage() {
                 </div>
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={profile.avatar_url || ""} />
-                  <AvatarFallback>{profile.full_name?.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{profile.full_name?.charAt(0) || "?"}</AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="font-bold flex items-center gap-2">
@@ -162,11 +162,11 @@ function LeaderboardPage() {
               </div>
               
               <div className="flex items-center gap-6">
-                {profile.streak > 0 && (
+                {profile.streak > 0 ? (
                   <div className="hidden sm:flex items-center gap-1 text-orange-500 font-bold">
                     <Flame className="h-4 w-4" /> {profile.streak}
                   </div>
-                )}
+                ) : null}
                 <div className="font-black text-right w-20">
                   {profile.xp} <span className="text-xs text-muted-foreground font-normal">XP</span>
                 </div>
