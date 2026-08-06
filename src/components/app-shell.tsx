@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { ChatAgent } from "@/components/chat-agent";
 
 const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -165,6 +166,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </header>
           <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
         </div>
+        <ChatAgent />
       </div>
     </SidebarProvider>
   );

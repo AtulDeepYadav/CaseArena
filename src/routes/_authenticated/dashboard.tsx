@@ -1,185 +1,193 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Flame,
-  Brain,
-  Users,
-  UploadCloud,
-  Gauge,
-  CalendarClock,
-  Plus,
-  Sparkles,
-  TrendingUp,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+import { Award, Flame, Target, Trophy, BrainCircuit, Lock, CheckCircle2, ChevronRight, BarChart2 } from "lucide-react";
+import { motion } from "framer-motion";
+
 import { PageHeader } from "@/components/page-header";
-import { StatCard } from "@/components/stat-card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — CaseArena" },
-      { name: "description", content: "Your case prep streak, sessions, uploads and AI scores." },
-      { property: "og:title", content: "Dashboard — CaseArena" },
-      { property: "og:description", content: "Track case practice, sessions and repository activity." },
+      { name: "description", content: "Your consulting prep learning arena." },
     ],
   }),
-  component: Dashboard,
+  component: DashboardPage,
 });
 
-function Dashboard() {
-  const { user, profile } = useAuth();
-  const uid = user?.id;
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", uid],
-    enabled: !!uid,
-    queryFn: async () => {
-      const nowIso = new Date().toISOString();
-      const [attempts, files, participation, activity, upcoming, trending] = await Promise.all([
-        supabase.from("ai_attempts").select("id,score,status,created_at,case_title").eq("user_id", uid!).order("created_at", { ascending: false }),
-        supabase.from("files").select("id", { count: "exact", head: true }).eq("owner_id", uid!),
-        supabase.from("session_participants").select("id", { count: "exact", head: true }).eq("user_id", uid!).eq("status", "booked"),
-        supabase.from("activity_logs").select("*").eq("user_id", uid!).order("created_at", { ascending: false }).limit(8),
-        supabase.from("prep_sessions").select("id,title,category,starts_at").gte("starts_at", nowIso).order("starts_at").limit(5),
-        supabase.from("files").select("id,title,like_count,category").eq("visibility", "public").eq("is_trashed", false).order("like_count", { ascending: false }).limit(5),
-      ]);
-      const evaluated = (attempts.data ?? []).filter((a) => typeof a.score === "number");
-      return {
-        attempts: attempts.data ?? [],
-        solved: evaluated.length,
-        avgScore: evaluated.length
-          ? Math.round(evaluated.reduce((s, a) => s + (a.score ?? 0), 0) / evaluated.length)
-          : 0,
-        uploads: files.count ?? 0,
-        sessions: participation.count ?? 0,
-        activity: activity.data ?? [],
-        upcoming: upcoming.data ?? [],
-        trending: trending.data ?? [],
-      };
-    },
-  });
+function DashboardPage() {
+  const { profile } = useAuth();
+  
+  // Gamification Data (Hardcoded for demo, normally from Supabase)
+  const userXP = profile?.xp || 2450;
+  const nextRankXP = 5000;
+  const progressPercent = Math.min((userXP / nextRankXP) * 100, 100);
+  const currentRank = "Analyst";
+  const nextRank = "Associate";
+  
+  const quests = [
+    { id: 1, title: "Profitability Basics", desc: "Master the fundamental revenue vs. cost tree.", status: "completed", xp: 500 },
+    { id: 2, title: "Market Entry Strategies", desc: "Learn how to assess new markets and calculate sizing.", status: "active", xp: 1000 },
+    { id: 3, title: "M&A Synergies", desc: "Evaluate mergers, acquisitions, and integration costs.", status: "locked", xp: 1500 },
+    { id: 4, title: "Pricing & Valuation", desc: "Determine optimal pricing strategies and ROI.", status: "locked", xp: 2000 },
+  ];
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <PageHeader
-        title={`Welcome back, ${profile?.full_name?.split(" ")[0] ?? "there"}`}
-        description="Here's where your preparation stands today."
-        action={
-          <Button asChild className="bg-gradient-primary">
-            <Link to="/trainer">
-              <Sparkles className="mr-1 h-4 w-4" /> Start AI case
-            </Link>
-          </Button>
-        }
-      />
+    <div className="mx-auto max-w-6xl pb-16 space-y-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <PageHeader 
+          title="Learning Arena" 
+          description="Track your progress, complete quests, and climb the ranks." 
+        />
+        <div className="flex items-center gap-4 bg-background border p-2 rounded-xl">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 text-orange-600 rounded-lg font-bold">
+            <Flame className="h-5 w-5" />
+            <span>12 Day Streak!</span>
+          </div>
+        </div>
+      </div>
 
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-2xl" />
+      {/* Top Section: XP & Rank */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 glass rounded-2xl p-8 flex flex-col justify-center">
+          <div className="flex justify-between items-end mb-4">
+            <div>
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">Current Rank</div>
+              <h2 className="text-3xl font-black">{currentRank}</h2>
+            </div>
+            <div className="text-right">
+              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">Next Rank: {nextRank}</div>
+              <div className="text-xl font-bold">{userXP} <span className="text-muted-foreground text-sm">/ {nextRankXP} XP</span></div>
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="h-4 w-full bg-muted rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="h-full bg-primary"
+            />
+          </div>
+          <p className="text-sm text-muted-foreground mt-4 text-center">
+            You are in the top 15% of candidates this week. Keep pushing!
+          </p>
+        </div>
+
+        {/* Leaderboard Snippet */}
+        <div className="glass rounded-2xl p-6">
+          <h3 className="font-bold flex items-center gap-2 mb-6">
+            <Trophy className="h-5 w-5 text-yellow-500" /> Cohort Leaderboard
+          </h3>
+          <div className="space-y-4">
+            {[
+              { name: "Sarah J.", rank: 1, xp: 8400 },
+              { name: "Michael T.", rank: 2, xp: 7200 },
+              { name: "You", rank: 3, xp: 2450 },
+            ].map((user) => (
+              <div key={user.rank} className={cn("flex items-center justify-between p-3 rounded-xl border", user.name === "You" ? "border-primary bg-primary/5" : "bg-background")}>
+                <div className="flex items-center gap-3">
+                  <div className="font-bold text-muted-foreground w-4">{user.rank}</div>
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium text-sm">{user.name}</span>
+                </div>
+                <Badge variant="secondary">{user.xp} XP</Badge>
+              </div>
+            ))}
+          </div>
+          <Button variant="ghost" className="w-full mt-4 text-xs" asChild>
+            <Link to="/leaderboard">View Full Rankings <ChevronRight className="h-3 w-3 ml-1" /></Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Quest Modules */}
+      <div>
+        <h3 className="text-2xl font-black mb-6 flex items-center gap-2">
+          <Target className="h-6 w-6" /> Learning Quests
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {quests.map((quest, idx) => (
+            <motion.div
+              key={quest.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className={cn(
+                "relative flex flex-col rounded-2xl border p-6 hover-lift",
+                quest.status === "locked" ? "bg-muted/30 opacity-70" : "glass"
+              )}
+            >
+              {quest.status === "completed" && (
+                <div className="absolute top-4 right-4 text-green-500">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
+              )}
+              {quest.status === "locked" && (
+                <div className="absolute top-4 right-4 text-muted-foreground">
+                  <Lock className="h-5 w-5" />
+                </div>
+              )}
+              
+              <div className="mb-4">
+                <Badge variant={quest.status === "active" ? "default" : "secondary"}>
+                  {quest.xp} XP
+                </Badge>
+              </div>
+              
+              <h4 className="font-bold text-lg mb-2">{quest.title}</h4>
+              <p className="text-sm text-muted-foreground mb-6 flex-1">{quest.desc}</p>
+              
+              <Button 
+                variant={quest.status === "active" ? "default" : "outline"} 
+                disabled={quest.status === "locked"}
+                className="w-full"
+                asChild={quest.status !== "locked"}
+              >
+                {quest.status === "locked" ? (
+                  <span>Locked</span>
+                ) : (
+                  <Link to={`/trainer`}>
+                    {quest.status === "completed" ? "Review" : "Start Quest"}
+                  </Link>
+                )}
+              </Button>
+            </motion.div>
           ))}
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <StatCard icon={Flame} label="Current streak" value={`${profile?.streak ?? 0} d`} index={0} />
-          <StatCard icon={Brain} label="Cases solved" value={data?.solved ?? 0} index={1} />
-          <StatCard icon={Users} label="Sessions booked" value={data?.sessions ?? 0} index={2} />
-          <StatCard icon={UploadCloud} label="Repository uploads" value={data?.uploads ?? 0} index={3} />
-          <StatCard icon={Gauge} label="Average AI score" value={data?.avgScore ?? 0} index={4} />
+      </div>
+
+      {/* Quick Action Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div className="glass rounded-2xl p-8 flex items-center gap-6">
+          <div className="bg-primary/10 p-4 rounded-full text-primary">
+            <BrainCircuit className="h-8 w-8" />
+          </div>
+          <div>
+            <h4 className="font-bold text-lg">AI Mock Interview</h4>
+            <p className="text-sm text-muted-foreground mb-3">Practice instantly with Grok.</p>
+            <Button asChild><Link to="/trainer">Start Practice</Link></Button>
+          </div>
         </div>
-      )}
-
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <section className="rounded-2xl glass p-5 lg:col-span-2">
-          <h2 className="text-sm font-semibold">Recent activity</h2>
-          <div className="mt-4 space-y-3">
-            {(data?.activity ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nothing yet — generate your first AI case to start the timeline.
-              </p>
-            )}
-            {(data?.activity ?? []).map((a) => (
-              <div key={a.id} className="flex items-start gap-3 border-l-2 border-primary/40 pl-3">
-                <div>
-                  <p className="text-sm font-medium">{a.description}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(a.created_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            ))}
+        <div className="glass rounded-2xl p-8 flex items-center gap-6">
+          <div className="bg-primary/10 p-4 rounded-full text-primary">
+            <BarChart2 className="h-8 w-8" />
           </div>
-        </section>
-
-        <section className="rounded-2xl glass p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <CalendarClock className="h-4 w-4 text-primary" /> Upcoming sessions
-          </h2>
-          <div className="mt-4 space-y-3">
-            {(data?.upcoming ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">No sessions scheduled.</p>
-            )}
-            {(data?.upcoming ?? []).map((s) => (
-              <Link
-                key={s.id}
-                to="/sessions/$sessionId"
-                params={{ sessionId: s.id }}
-                className="block rounded-xl border border-border/60 p-3 transition-colors hover:bg-accent/50"
-              >
-                <p className="text-sm font-medium">{s.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(s.starts_at).toLocaleString()} · {s.category}
-                </p>
-              </Link>
-            ))}
+          <div>
+            <h4 className="font-bold text-lg">Group Sessions</h4>
+            <p className="text-sm text-muted-foreground mb-3">Join live peer practice rooms.</p>
+            <Button asChild variant="secondary"><Link to="/sessions">Find Peers</Link></Button>
           </div>
-        </section>
+        </div>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl glass p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <TrendingUp className="h-4 w-4 text-primary" /> Trending community uploads
-          </h2>
-          <div className="mt-4 space-y-2">
-            {(data?.trending ?? []).length === 0 && (
-              <p className="text-sm text-muted-foreground">No public uploads yet.</p>
-            )}
-            {(data?.trending ?? []).map((f) => (
-              <div key={f.id} className="flex items-center justify-between rounded-xl border border-border/60 p-3">
-                <span className="truncate text-sm">{f.title}</span>
-                <Badge variant="secondary">{f.like_count} likes</Badge>
-              </div>
-            ))}
-          </div>
-          <Button asChild variant="ghost" size="sm" className="mt-3">
-            <Link to="/community">Browse community</Link>
-          </Button>
-        </section>
-
-        <section className="rounded-2xl glass p-5">
-          <h2 className="text-sm font-semibold">Quick actions</h2>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Button asChild variant="outline" className="justify-start">
-              <Link to="/trainer"><Brain className="mr-2 h-4 w-4" />Start AI case</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link to="/repository"><UploadCloud className="mr-2 h-4 w-4" />Upload file</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link to="/sessions/host"><Plus className="mr-2 h-4 w-4" />Host session</Link>
-            </Button>
-            <Button asChild variant="outline" className="justify-start">
-              <Link to="/sessions"><Users className="mr-2 h-4 w-4" />Join session</Link>
-            </Button>
-          </div>
-        </section>
-      </div>
     </div>
   );
 }
