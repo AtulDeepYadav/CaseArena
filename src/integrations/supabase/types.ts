@@ -712,6 +712,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          community_activity: boolean
+          created_at: string
+          email_notifications: boolean
+          product_updates: boolean
+          session_reminders: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          community_activity?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          product_updates?: boolean
+          session_reminders?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          community_activity?: boolean
+          created_at?: string
+          email_notifications?: boolean
+          product_updates?: boolean
+          session_reminders?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

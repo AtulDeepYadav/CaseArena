@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test coverage (Case Repository / Account Management module)
+        run: npm run coverage
+
+      # Repo-wide `npm run lint` currently fails on pre-existing violations
+      # unrelated to this module (~1000 errors in other routes). Scoped here
+      # to the files this module owns until that debt is cleaned up separately.
+      - name: Lint (Case Repository / Account Management module)
+        run: >
+          npx eslint
+          src/lib/bookmarks.ts src/lib/profile.ts src/lib/user-settings.ts src/lib/errors.ts
+          src/routes/_authenticated/bookmarks.tsx src/routes/_authenticated/profile.tsx
+          src/routes/_authenticated/settings.tsx src/routes/_authenticated/community.tsx
+          src/test vitest.config.ts

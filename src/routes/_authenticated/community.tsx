@@ -8,12 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -24,20 +19,35 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { addBookmark } from "@/lib/bookmarks";
 
 export const Route = createFileRoute("/_authenticated/community")({
   head: () => ({
     meta: [
       { title: "Community Repository — CaseArena" },
-      { name: "description", content: "Discover case notes and frameworks shared by the IIM Lucknow cohort." },
+      {
+        name: "description",
+        content: "Discover case notes and frameworks shared by the IIM Lucknow cohort.",
+      },
       { property: "og:title", content: "Community Repository — CaseArena" },
-      { property: "og:description", content: "Browse, rate and discuss shared case prep material." },
+      {
+        property: "og:description",
+        content: "Browse, rate and discuss shared case prep material.",
+      },
     ],
   }),
   component: CommunityPage,
 });
 
-const categories = ["All", "Consulting", "Product Management", "Marketing", "Operations", "Finance", "General Business"];
+const categories = [
+  "All",
+  "Consulting",
+  "Product Management",
+  "Marketing",
+  "Operations",
+  "Finance",
+  "General Business",
+];
 
 function CommunityPage() {
   const { user } = useAuth();
@@ -97,9 +107,9 @@ function CommunityPage() {
   };
 
   const bookmark = async (fileId: string) => {
-    const { error } = await supabase.from("bookmarks").insert({ user_id: user!.id, file_id: fileId });
-    if (error) return toast.error("Already bookmarked");
-    toast.success("Bookmarked");
+    const result = await addBookmark(supabase, user!.id, fileId);
+    if (!result.ok) return toast.error(result.error);
+    toast.success(result.alreadyBookmarked ? "Already bookmarked" : "Bookmarked");
   };
 
   const download = async (path: string | null, name: string | null) => {
@@ -135,13 +145,21 @@ function CommunityPage() {
           />
         </div>
         <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            {categories.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="recent">Most recent</SelectItem>
             <SelectItem value="likes">Most liked</SelectItem>
@@ -152,7 +170,9 @@ function CommunityPage() {
 
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-2xl" />)}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-44 rounded-2xl" />
+          ))}
         </div>
       ) : visible.length === 0 ? (
         <div className="rounded-2xl glass p-10 text-center text-sm text-muted-foreground">
@@ -165,9 +185,15 @@ function CommunityPage() {
               <h3 className="text-sm font-semibold">{f.title}</h3>
               <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{f.description}</p>
               <div className="mt-2 flex flex-wrap gap-1">
-                {f.category && <Badge variant="outline" className="text-[10px]">{f.category}</Badge>}
+                {f.category && (
+                  <Badge variant="outline" className="text-[10px]">
+                    {f.category}
+                  </Badge>
+                )}
                 {(f.tags ?? []).slice(0, 3).map((t) => (
-                  <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>
+                  <Badge key={t} variant="outline" className="text-[10px]">
+                    {t}
+                  </Badge>
                 ))}
               </div>
               <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
@@ -266,7 +292,9 @@ function CommentsDialog({ fileId, onClose }: { fileId: string | null; onClose: (
           placeholder="Add a comment"
           onChange={(e) => setText(e.target.value)}
         />
-        <Button onClick={post} className="bg-gradient-primary">Post comment</Button>
+        <Button onClick={post} className="bg-gradient-primary">
+          Post comment
+        </Button>
       </DialogContent>
     </Dialog>
   );
