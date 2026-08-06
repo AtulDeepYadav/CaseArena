@@ -209,7 +209,7 @@ function CommunityPage() {
                   {f.like_count}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setOpenFile(f.id)}>
-                  <MessageSquare className="mr-1 h-4 w-4" /> Discuss
+                  <MessageSquare className="mr-1 h-4 w-4" /> Discuss ({f.comment_count ?? 0})
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => bookmark(f.id)}>
                   <Bookmark className="h-4 w-4" />
@@ -265,6 +265,7 @@ function CommentsDialog({ fileId, onClose }: { fileId: string | null; onClose: (
     if (error) return toast.error(error.message);
     setText("");
     qc.invalidateQueries({ queryKey: ["comments", fileId] });
+    qc.invalidateQueries({ queryKey: ["community"] });
   };
 
   return (

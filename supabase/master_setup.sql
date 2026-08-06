@@ -135,6 +135,7 @@ CREATE TABLE public.files (
   like_count integer NOT NULL DEFAULT 0,
   rating_avg numeric NOT NULL DEFAULT 0,
   rating_count integer NOT NULL DEFAULT 0,
+  comment_count integer NOT NULL DEFAULT 0,
   is_archived boolean NOT NULL DEFAULT false,
   is_trashed boolean NOT NULL DEFAULT false,
   is_removed boolean NOT NULL DEFAULT false,
@@ -504,3 +505,48 @@ CREATE POLICY "own delete avatar" ON storage.objects FOR DELETE TO authenticated
 USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
 CREATE POLICY "public read avatars" ON storage.objects FOR SELECT
 USING (bucket_id = 'avatars');
+
+-- EPIC 2 bugfix: keep files.like_count / rating_avg / rating_count / comment_count in sync
+CREATE OR REPLACE FUNCTION public.sync_file_like_count() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE public.files SET like_count = like_count + 1 WHERE id = NEW.file_id;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE public.files SET like_count = GREATEST(like_count - 1, 0) WHERE id = OLD.file_id;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END; $$;
+CREATE TRIGGER file_likes_sync_count AFTER INSERT OR DELETE ON public.file_likes
+  FOR EACH ROW EXECUTE FUNCTION public.sync_file_like_count();
+
+CREATE OR REPLACE FUNCTION public.sync_file_comment_count() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE public.files SET comment_count = comment_count + 1 WHERE id = NEW.file_id;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE public.files SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = OLD.file_id;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END; $$;
+CREATE TRIGGER file_comments_sync_count AFTER INSERT OR DELETE ON public.file_comments
+  FOR EACH ROW EXECUTE FUNCTION public.sync_file_comment_count();
+
+CREATE OR REPLACE FUNCTION public.sync_file_rating_stats() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  target_file_id uuid := COALESCE(NEW.file_id, OLD.file_id);
+BEGIN
+  UPDATE public.files f
+  SET rating_avg = COALESCE((SELECT AVG(rating) FROM public.file_ratings WHERE file_id = target_file_id), 0),
+      rating_count = (SELECT COUNT(*) FROM public.file_ratings WHERE file_id = target_file_id)
+  WHERE f.id = target_file_id;
+  RETURN COALESCE(NEW, OLD);
+END; $$;
+CREATE TRIGGER file_ratings_sync_stats AFTER INSERT OR UPDATE OR DELETE ON public.file_ratings
+  FOR EACH ROW EXECUTE FUNCTION public.sync_file_rating_stats();

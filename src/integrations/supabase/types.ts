@@ -257,6 +257,7 @@ export type Database = {
       files: {
         Row: {
           category: string | null
+          comment_count: number
           company: string | null
           created_at: string
           description: string | null
@@ -285,6 +286,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          comment_count?: number
           company?: string | null
           created_at?: string
           description?: string | null
@@ -313,6 +315,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          comment_count?: number
           company?: string | null
           created_at?: string
           description?: string | null
