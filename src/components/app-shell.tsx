@@ -39,7 +39,7 @@ import { ChatAgent } from "@/components/chat-agent";
 
 const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "AI Trainer", url: "/trainer", icon: Brain },
+  { title: "AI Trainer", url: "https://casearena-engine.vercel.app", icon: Brain },
   { title: "Repository", url: "/repository", icon: FolderKanban },
   { title: "Community", url: "/community", icon: Globe2 },
 ];
@@ -74,22 +74,37 @@ function NavGroup({
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.url}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.url || pathname.startsWith(item.url + "/")}
-              >
-                <Link to={item.url} className="flex items-center gap-2">
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                  {item.url === "/notifications" && !!unread && (
-                    <Badge className="ml-auto h-5 px-1.5 text-[10px]">{unread}</Badge>
+          {items.map((item) => {
+            const isExternal = item.url.startsWith("http");
+            const content = (
+              <>
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+                {item.url === "/notifications" && !!unread && (
+                  <Badge className="ml-auto h-5 px-1.5 text-[10px]">{unread}</Badge>
+                )}
+              </>
+            );
+
+            return (
+              <SidebarMenuItem key={item.url}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={!isExternal && (pathname === item.url || pathname.startsWith(item.url + "/"))}
+                >
+                  {isExternal ? (
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                      {content}
+                    </a>
+                  ) : (
+                    <Link to={item.url} className="flex items-center gap-2">
+                      {content}
+                    </Link>
                   )}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
