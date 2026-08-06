@@ -50,6 +50,48 @@ Exhibits must contain 1-3 exhibits with 3-6 numeric rows each so they can be cha
     };
   });
 
+const ENGINE_CASE_TYPES = [
+  "profitability",
+  "market_entry",
+  "growth",
+  "m_and_a_pe_vc",
+  "pricing",
+  "unconventional",
+] as const;
+
+const GenerateEngineInput = z.object({
+  caseType: z.enum(ENGINE_CASE_TYPES),
+});
+
+/**
+ * Starts a real interview session on the CaseArena engine (curated case
+ * library, Grok-driven interviewer, reveal_map fact withholding) instead of
+ * the one-shot generateCase() above. Returns the URL to redirect the browser
+ * to — the engine owns the session from here.
+ */
+export const generateEngineCase = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => GenerateEngineInput.parse(input))
+  .handler(async ({ data }) => {
+    const engineUrl = process.env.CASEARENA_ENGINE_URL;
+    if (!engineUrl) throw new Error("CASEARENA_ENGINE_URL is not configured.");
+
+    const res = await fetch(`${engineUrl}/api/cases/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ caseType: data.caseType }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Engine returned ${res.status}: ${body.slice(0, 300)}`);
+    }
+    const generated = (await res.json()) as { sessionId: string; case: { title: string } };
+    return {
+      sessionId: generated.sessionId,
+      title: generated.case.title,
+      redirectUrl: `${engineUrl}/interview/${generated.sessionId}`,
+    };
+  });
+
 export const evaluateAttempt = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => EvaluateInput.parse(input))
   .handler(async ({ data }) => {

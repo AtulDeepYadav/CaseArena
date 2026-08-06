@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -26,7 +26,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { generateCase } from "@/lib/ai.functions";
+import { generateEngineCase } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/_authenticated/trainer/")({
   head: () => ({
@@ -41,13 +41,24 @@ export const Route = createFileRoute("/_authenticated/trainer/")({
 });
 
 const categories = ["Consulting", "Product Management", "Marketing", "Operations", "Finance", "General Business"];
-const caseTypes = ["Market Entry", "Pricing", "Growth", "Profitability", "M&A", "Operations", "Product Design", "Product Strategy", "Product Metrics"];
+
+// Only case types the CaseArena engine has curated content for. Product
+// Design/Strategy/Metrics and Operations are hidden until the engine's
+// library covers them.
+const ENGINE_CASE_TYPE_MAP: Record<string, "profitability" | "market_entry" | "growth" | "m_and_a_pe_vc" | "pricing" | "unconventional"> = {
+  "Market Entry": "market_entry",
+  "Pricing": "pricing",
+  "Growth": "growth",
+  "Profitability": "profitability",
+  "M&A": "m_and_a_pe_vc",
+  "Unconventional": "unconventional",
+};
+const caseTypes = Object.keys(ENGINE_CASE_TYPE_MAP);
 const interviewTypes = ["Interviewer-led", "Candidate-led", "Written Case"];
 
 function TrainerHome() {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const generate = useServerFn(generateCase);
+  const generate = useServerFn(generateEngineCase);
   const [category, setCategory] = useState(categories[0]);
   const [caseType, setCaseType] = useState(caseTypes[0]);
   const [interviewType, setInterviewType] = useState(interviewTypes[0]);
@@ -78,38 +89,17 @@ function TrainerHome() {
     setBusy(true);
     try {
       const generated = await generate({
-        data: {
-          category,
-          caseType,
-          interviewType,
-          difficulty,
-          durationMinutes: Number(duration),
-        },
+        data: { caseType: ENGINE_CASE_TYPE_MAP[caseType] },
       });
-      const { data, error } = await supabase
-        .from("ai_attempts")
-        .insert({
-          user_id: user!.id,
-          category,
-          case_type: caseType,
-          interview_type: interviewType,
-          difficulty,
-          duration_minutes: Number(duration),
-          case_title: generated.title ?? `${caseType} case`,
-          case_content: generated,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
       await supabase.from("activity_logs").insert({
         user_id: user!.id,
         type: "ai",
         description: `Started AI case: ${generated.title}`,
       });
-      navigate({ to: "/trainer/$attemptId", params: { attemptId: data.id } });
+      // Same-tab redirect — the engine owns the interview session from here.
+      window.location.href = generated.redirectUrl;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not generate case");
-    } finally {
       setBusy(false);
     }
   };
