@@ -550,3 +550,7 @@ BEGIN
 END; $$;
 CREATE TRIGGER file_ratings_sync_stats AFTER INSERT OR UPDATE OR DELETE ON public.file_ratings
   FOR EACH ROW EXECUTE FUNCTION public.sync_file_rating_stats();
+
+REVOKE EXECUTE ON FUNCTION public.sync_file_like_count() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.sync_file_comment_count() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.sync_file_rating_stats() FROM anon, authenticated, public;

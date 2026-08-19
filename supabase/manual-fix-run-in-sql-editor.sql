@@ -108,6 +108,10 @@ DROP TRIGGER IF EXISTS file_ratings_sync_stats ON public.file_ratings;
 CREATE TRIGGER file_ratings_sync_stats AFTER INSERT OR UPDATE OR DELETE ON public.file_ratings
   FOR EACH ROW EXECUTE FUNCTION public.sync_file_rating_stats();
 
+REVOKE EXECUTE ON FUNCTION public.sync_file_like_count() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.sync_file_comment_count() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.sync_file_rating_stats() FROM anon, authenticated, public;
+
 -- Backfill: correct any counts that drifted while these triggers didn't exist yet
 UPDATE public.files f SET like_count = (SELECT COUNT(*) FROM public.file_likes WHERE file_id = f.id);
 UPDATE public.files f SET comment_count = (SELECT COUNT(*) FROM public.file_comments WHERE file_id = f.id);
