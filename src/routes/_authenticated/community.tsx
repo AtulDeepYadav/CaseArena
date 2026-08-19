@@ -105,6 +105,19 @@ function CommunityPage() {
     },
   });
 
+  const { data: myBookmarks = [] } = useQuery({
+    queryKey: ["my-bookmarked-files", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("bookmarks")
+        .select("file_id")
+        .eq("user_id", user!.id)
+        .not("file_id", "is", null);
+      return (data ?? []).map((b) => b.file_id) as string[];
+    },
+  });
+
   const toggleLike = async (fileId: string) => {
     const { error } = myLikes.includes(fileId)
       ? await supabase.from("file_likes").delete().eq("file_id", fileId).eq("user_id", user!.id)
@@ -125,9 +138,20 @@ function CommunityPage() {
   };
 
   const bookmark = async (fileId: string) => {
-    const result = await addBookmark(supabase, user!.id, fileId);
-    if (!result.ok) return toast.error(result.error);
-    toast.success(result.alreadyBookmarked ? "Already bookmarked" : "Bookmarked");
+    if (myBookmarks.includes(fileId)) {
+      const { error } = await supabase
+        .from("bookmarks")
+        .delete()
+        .eq("file_id", fileId)
+        .eq("user_id", user!.id);
+      if (error) return toast.error(error.message);
+      toast.success("Bookmark removed");
+    } else {
+      const result = await addBookmark(supabase, user!.id, fileId);
+      if (!result.ok) return toast.error(result.error);
+      toast.success(result.alreadyBookmarked ? "Already bookmarked" : "Bookmarked");
+    }
+    qc.invalidateQueries({ queryKey: ["my-bookmarked-files"] });
   };
 
   const download = async (path: string | null, name: string | null) => {
@@ -244,8 +268,15 @@ function CommunityPage() {
                 <Button variant="ghost" size="sm" onClick={() => setOpenFile(f.id)}>
                   <MessageSquare className="mr-1 h-4 w-4" /> Discuss ({f.comment_count ?? 0})
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => bookmark(f.id)}>
-                  <Bookmark className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={myBookmarks.includes(f.id) ? "Remove bookmark" : "Bookmark"}
+                  onClick={() => bookmark(f.id)}
+                >
+                  <Bookmark
+                    className={`h-4 w-4 ${myBookmarks.includes(f.id) ? "fill-primary text-primary" : ""}`}
+                  />
                 </Button>
                 <Button
                   variant="ghost"

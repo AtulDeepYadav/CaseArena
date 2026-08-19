@@ -1,4 +1,4 @@
-# Google SSO setup
+# Google SSO + Supabase Auth URL configuration
 
 The app's code is already wired for Google sign-in end to end:
 
@@ -47,3 +47,39 @@ Once both are set, click "Continue with Google" on `/auth` in the deployed app �
 bounce to Google's account picker, then land back on `/dashboard` already signed in, with
 a `profiles` row auto-created for the new account. No further code changes are needed for
 this to work once the above is in place.
+
+If you see `{"code":400,"error_code":"validation_failed","msg":"Unsupported provider:
+missing OAuth secret"}` when clicking the button, that means the Google provider is toggled
+**on** in the Supabase dashboard but the Client ID/Secret fields were left empty — go back
+into step 2 and fill both in.
+
+## Password reset redirecting to a Lovable domain instead of this app
+
+This is the same category of issue as the OAuth secret above — not a code bug. The app
+already computes the reset link dynamically and correctly:
+`supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/reset-password" })`
+in `src/routes/auth.tsx`. But Supabase's Auth server only honors a `redirectTo` value if
+it's present in the project's **allow-listed** redirect URLs — otherwise it silently
+substitutes the project's default **Site URL**. If that Site URL is still set to a Lovable
+preview/hosted domain (likely left over from when Lovable Cloud first provisioned this
+Supabase project), every auth email link — password reset, signup confirmation — will land
+back on that Lovable domain instead of wherever this app is actually deployed, no matter
+what the code passes.
+
+**Fix, in the Supabase Dashboard → Authentication → URL Configuration:**
+
+1. Set **Site URL** to this app's real production URL (whichever domain it's actually
+   deployed on — e.g. the Vercel domain, or a custom domain).
+2. Under **Redirect URLs**, add every origin the app is actually served from that should be
+   allowed to receive auth callbacks, e.g.:
+   ```
+   https://<your-production-domain>/**
+   https://<your-vercel-preview-domain>/**
+   http://localhost:8080/**
+   ```
+   (The `/**` wildcard covers `/dashboard`, `/reset-password`, etc. under that origin.)
+3. Remove or stop relying on any Lovable preview URL as the Site URL, unless that's actually
+   where the app should be live.
+
+No code change accompanies this — the redirect URL Supabase actually uses is entirely a
+function of this dashboard setting, not anything in this repo.
