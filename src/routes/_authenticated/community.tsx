@@ -90,12 +90,26 @@ function CommunityPage() {
     },
   });
 
+  const { data: myRatings = {} } = useQuery({
+    queryKey: ["my-ratings", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("file_ratings")
+        .select("file_id, rating")
+        .eq("user_id", user!.id);
+      return Object.fromEntries((data ?? []).map((r) => [r.file_id, r.rating])) as Record<
+        string,
+        number
+      >;
+    },
+  });
+
   const toggleLike = async (fileId: string) => {
-    if (myLikes.includes(fileId)) {
-      await supabase.from("file_likes").delete().eq("file_id", fileId).eq("user_id", user!.id);
-    } else {
-      await supabase.from("file_likes").insert({ file_id: fileId, user_id: user!.id });
-    }
+    const { error } = myLikes.includes(fileId)
+      ? await supabase.from("file_likes").delete().eq("file_id", fileId).eq("user_id", user!.id)
+      : await supabase.from("file_likes").insert({ file_id: fileId, user_id: user!.id });
+    if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["my-likes"] });
     qc.invalidateQueries({ queryKey: ["community"] });
   };
@@ -106,6 +120,7 @@ function CommunityPage() {
       .upsert({ file_id: fileId, user_id: user!.id, rating }, { onConflict: "file_id,user_id" });
     if (error) return toast.error(error.message);
     toast.success(`Rated ${rating}/5`);
+    qc.invalidateQueries({ queryKey: ["my-ratings"] });
     qc.invalidateQueries({ queryKey: ["community"] });
   };
 
@@ -252,7 +267,13 @@ function CommunityPage() {
               <div className="mt-2 flex gap-1">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button key={n} onClick={() => rate(f.id, n)} aria-label={`Rate ${n}`}>
-                    <Star className="h-4 w-4 text-muted-foreground transition-colors hover:text-primary" />
+                    <Star
+                      className={`h-4 w-4 transition-colors hover:text-primary ${
+                        (myRatings[f.id] ?? 0) >= n
+                          ? "fill-primary text-primary"
+                          : "text-muted-foreground"
+                      }`}
+                    />
                   </button>
                 ))}
               </div>
