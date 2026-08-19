@@ -118,12 +118,59 @@ function CommunityPage() {
     },
   });
 
+  // Computed live from the source tables rather than the (currently
+  // trigger-dependent, possibly stale) files.like_count / rating_avg /
+  // rating_count / comment_count columns — works regardless of whether
+  // that trigger migration has been applied yet.
+  const fileIds = files.map((f) => f.id);
+  const { data: interactionStats } = useQuery({
+    queryKey: ["file-interaction-stats", fileIds],
+    enabled: fileIds.length > 0,
+    queryFn: async () => {
+      const [likesRes, ratingsRes, commentsRes] = await Promise.all([
+        supabase.from("file_likes").select("file_id").in("file_id", fileIds),
+        supabase.from("file_ratings").select("file_id, rating").in("file_id", fileIds),
+        supabase.from("file_comments").select("file_id").in("file_id", fileIds),
+      ]);
+
+      const likeCounts: Record<string, number> = {};
+      for (const row of likesRes.data ?? []) {
+        likeCounts[row.file_id] = (likeCounts[row.file_id] ?? 0) + 1;
+      }
+
+      const ratingTotals: Record<string, { sum: number; count: number }> = {};
+      for (const row of ratingsRes.data ?? []) {
+        const cur = ratingTotals[row.file_id] ?? { sum: 0, count: 0 };
+        cur.sum += row.rating;
+        cur.count += 1;
+        ratingTotals[row.file_id] = cur;
+      }
+      const ratingStats: Record<string, { avg: number; count: number }> = {};
+      for (const [fileId, { sum, count }] of Object.entries(ratingTotals)) {
+        ratingStats[fileId] = { avg: sum / count, count };
+      }
+
+      const commentCounts: Record<string, number> = {};
+      for (const row of commentsRes.data ?? []) {
+        commentCounts[row.file_id] = (commentCounts[row.file_id] ?? 0) + 1;
+      }
+
+      return { likeCounts, ratingStats, commentCounts };
+    },
+  });
+
+  const likeCountOf = (fileId: string) => interactionStats?.likeCounts[fileId] ?? 0;
+  const ratingStatOf = (fileId: string) =>
+    interactionStats?.ratingStats[fileId] ?? { avg: 0, count: 0 };
+  const commentCountOf = (fileId: string) => interactionStats?.commentCounts[fileId] ?? 0;
+
   const toggleLike = async (fileId: string) => {
     const { error } = myLikes.includes(fileId)
       ? await supabase.from("file_likes").delete().eq("file_id", fileId).eq("user_id", user!.id)
       : await supabase.from("file_likes").insert({ file_id: fileId, user_id: user!.id });
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["my-likes"] });
+    qc.invalidateQueries({ queryKey: ["file-interaction-stats"] });
     qc.invalidateQueries({ queryKey: ["community"] });
   };
 
@@ -134,6 +181,7 @@ function CommunityPage() {
     if (error) return toast.error(error.message);
     toast.success(`Rated ${rating}/5`);
     qc.invalidateQueries({ queryKey: ["my-ratings"] });
+    qc.invalidateQueries({ queryKey: ["file-interaction-stats"] });
     qc.invalidateQueries({ queryKey: ["community"] });
   };
 
@@ -255,7 +303,7 @@ function CommunityPage() {
               </div>
               <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
                 <Star className="h-3.5 w-3.5 text-primary" />
-                {f.rating_avg?.toFixed(1) ?? "0.0"} ({f.rating_count})
+                {ratingStatOf(f.id).avg.toFixed(1)} ({ratingStatOf(f.id).count})
                 <span className="ml-2">{f.download_count} downloads</span>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-1">
@@ -263,10 +311,10 @@ function CommunityPage() {
                   <Heart
                     className={`mr-1 h-4 w-4 ${myLikes.includes(f.id) ? "fill-primary text-primary" : ""}`}
                   />
-                  {f.like_count}
+                  {likeCountOf(f.id)}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setOpenFile(f.id)}>
-                  <MessageSquare className="mr-1 h-4 w-4" /> Discuss ({f.comment_count ?? 0})
+                  <MessageSquare className="mr-1 h-4 w-4" /> Discuss ({commentCountOf(f.id)})
                 </Button>
                 <Button
                   variant="ghost"
@@ -345,6 +393,7 @@ function CommentsDialog({ fileId, onClose }: { fileId: string | null; onClose: (
     if (error) return toast.error(error.message);
     setText("");
     qc.invalidateQueries({ queryKey: ["comments", fileId] });
+    qc.invalidateQueries({ queryKey: ["file-interaction-stats"] });
     qc.invalidateQueries({ queryKey: ["community"] });
   };
 
