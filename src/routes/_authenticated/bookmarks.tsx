@@ -1,13 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Bookmark, Download, FileText, Trash2, ClipboardList } from "lucide-react";
+import { Bookmark, Download, Eye, FileText, Trash2, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
+import { FilePreviewDialog, type FilePreviewState } from "@/components/file-preview-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { isPdfFile } from "@/lib/file-preview";
 
 export const Route = createFileRoute("/_authenticated/bookmarks")({
   head: () => ({
@@ -29,6 +32,7 @@ type FileRow = {
   tags: string[] | null;
   storage_path: string | null;
   file_name: string | null;
+  file_type: string | null;
 };
 
 type AttemptRow = {
@@ -47,6 +51,7 @@ type BookmarkRow = {
 export function BookmarksPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [preview, setPreview] = useState<FilePreviewState>(null);
 
   const { data: bookmarks = [], isLoading } = useQuery({
     queryKey: ["bookmarks", user?.id],
@@ -70,7 +75,7 @@ export function BookmarksPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("files")
-        .select("id, title, description, category, tags, storage_path, file_name")
+        .select("id, title, description, category, tags, storage_path, file_name, file_type")
         .in("id", fileIds);
       return (data ?? []) as FileRow[];
     },
@@ -105,6 +110,21 @@ export function BookmarksPage() {
     });
     if (error || !data) return toast.error(error?.message ?? "Download failed");
     window.open(data.signedUrl, "_blank", "noopener");
+  };
+
+  const viewFile = async (path: string | null, name: string | null, type: string | null) => {
+    if (!path) return toast.error("No file attached");
+    const title = name ?? "File";
+    const isPdf = isPdfFile(type, name);
+    setPreview({ title, url: null, isPdf });
+    if (!isPdf) return;
+    const { data, error } = await supabase.storage.from("repository").createSignedUrl(path, 60);
+    if (error || !data) {
+      toast.error(error?.message ?? "Could not open preview");
+      setPreview(null);
+      return;
+    }
+    setPreview({ title, url: data.signedUrl, isPdf: true });
   };
 
   return (
@@ -150,6 +170,13 @@ export function BookmarksPage() {
                     ))}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => viewFile(file.storage_path, file.file_name, file.file_type)}
+                    >
+                      <Eye className="mr-1 h-4 w-4" /> View
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -205,6 +232,8 @@ export function BookmarksPage() {
           })}
         </div>
       )}
+
+      <FilePreviewDialog preview={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }

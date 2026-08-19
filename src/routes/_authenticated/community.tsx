@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Heart, Star, MessageSquare, Download, Bookmark, Search } from "lucide-react";
+import { Heart, Star, MessageSquare, Download, Eye, Bookmark, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +17,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/page-header";
+import { FilePreviewDialog, type FilePreviewState } from "@/components/file-preview-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { addBookmark } from "@/lib/bookmarks";
+import { isPdfFile } from "@/lib/file-preview";
 
 export const Route = createFileRoute("/_authenticated/community")({
   head: () => ({
@@ -56,6 +58,7 @@ function CommunityPage() {
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("recent");
   const [openFile, setOpenFile] = useState<string | null>(null);
+  const [preview, setPreview] = useState<FilePreviewState>(null);
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ["community", category, sort],
@@ -119,6 +122,21 @@ function CommunityPage() {
     });
     if (error || !data) return toast.error(error?.message ?? "Download failed");
     window.open(data.signedUrl, "_blank", "noopener");
+  };
+
+  const viewFile = async (path: string | null, name: string | null, type: string | null) => {
+    if (!path) return toast.error("No file attached");
+    const title = name ?? "File";
+    const isPdf = isPdfFile(type, name);
+    setPreview({ title, url: null, isPdf });
+    if (!isPdf) return;
+    const { data, error } = await supabase.storage.from("repository").createSignedUrl(path, 60);
+    if (error || !data) {
+      toast.error(error?.message ?? "Could not open preview");
+      setPreview(null);
+      return;
+    }
+    setPreview({ title, url: data.signedUrl, isPdf: true });
   };
 
   const visible = files.filter((f) =>
@@ -217,6 +235,15 @@ function CommunityPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label="View"
+                  onClick={() => viewFile(f.storage_path, f.file_name, f.file_type)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Download"
                   onClick={() => download(f.storage_path, f.file_name)}
                 >
                   <Download className="h-4 w-4" />
@@ -235,6 +262,7 @@ function CommunityPage() {
       )}
 
       <CommentsDialog fileId={openFile} onClose={() => setOpenFile(null)} />
+      <FilePreviewDialog preview={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }
