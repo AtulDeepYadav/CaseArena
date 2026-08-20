@@ -1,12 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Users, ExternalLink, GraduationCap, Briefcase, MapPin, Clock } from "lucide-react";
+import { Users, ExternalLink, Briefcase, Clock, FileText } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/peers")({
   component: MatchmakerPage,
@@ -20,6 +27,9 @@ type Profile = {
   active_time: string;
   preferred_domains: string[];
   linkedin_url: string;
+  etrigan_url?: string;
+  bio?: string;
+  skills?: string[];
   similarityScore?: number;
 };
 
@@ -43,14 +53,11 @@ function MatchmakerPage() {
       if (!me) return;
       setMyProfile(me as any);
 
-      // 2. Determine target batch (PGP 1 looks for PGP 2, and vice versa)
-      const targetBatch = me.batch === "PGP 1" ? "PGP 2" : "PGP 1";
-
-      // 3. Fetch all users from target batch
+      // 2. Fetch all other users
       const { data: others } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, batch, active_time, preferred_domains, linkedin_url")
-        .eq("batch", targetBatch);
+        .select("id, full_name, avatar_url, batch, active_time, preferred_domains, linkedin_url, etrigan_url, bio, skills")
+        .neq("id", session.user.id);
 
       if (others) {
         // Calculate similarity
@@ -95,10 +102,7 @@ function MatchmakerPage() {
     <div className="mx-auto max-w-5xl pb-16">
       <PageHeader
         title="Peer Matchmaker"
-        description={myProfile?.batch === "PGP 1" 
-          ? "We found these PGP 2 seniors whose domains and prep schedules strongly align with yours (>70% match)."
-          : "We found these PGP 1 juniors whose domains and prep schedules strongly align with yours (>70% match)."
-        }
+        description="We found these peers whose domains and prep schedules strongly align with yours (>70% match)."
       />
 
       <div className="mt-8">
@@ -113,8 +117,7 @@ function MatchmakerPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">No perfect matches yet</h3>
             <p className="text-muted-foreground max-w-md">
-              We couldn't find any {myProfile?.batch === "PGP 1" ? "PGP 2" : "PGP 1"} peers with a{" "}
-              {">"}70% profile match right now. Check back as more students complete their onboarding!
+              We couldn't find any peers with a {">"}70% profile match right now. Check back as more students complete their onboarding!
             </p>
           </div>
         ) : (
@@ -155,9 +158,80 @@ function MatchmakerPage() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-border/50 flex gap-2">
-                  <Button className="flex-1" onClick={() => window.location.href = "/sessions/host"}>
-                    Invite to Session
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="flex-1">View Profile</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Peer Profile</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex flex-col items-center gap-4 py-4">
+                        <Avatar className="h-24 w-24 ring-4 ring-primary/20">
+                          <AvatarImage src={match.avatar_url} />
+                          <AvatarFallback className="text-2xl">{match.full_name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="text-center">
+                          <h2 className="text-xl font-bold">{match.full_name}</h2>
+                          <p className="text-muted-foreground">{match.batch}</p>
+                        </div>
+                        
+                        {match.bio && (
+                          <div className="w-full mt-2 text-sm text-center bg-muted/30 p-3 rounded-lg">
+                            "{match.bio}"
+                          </div>
+                        )}
+
+                        <div className="w-full space-y-4 mt-4">
+                          <div>
+                            <h4 className="text-sm font-semibold mb-2">Preferred Domains</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {match.preferred_domains?.map(d => (
+                                <Badge key={d} variant="secondary">{d}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {match.skills && match.skills.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold mb-2">Skills</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {match.skills.map(s => (
+                                  <Badge key={s} variant="outline">{s}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <h4 className="text-sm font-semibold mb-2">Prep Schedule</h4>
+                            <p className="text-sm text-muted-foreground">Active mostly in the {match.active_time}</p>
+                          </div>
+                        </div>
+
+                        <div className="w-full mt-4 flex gap-2">
+                          <Button className="flex-1" variant="default" onClick={() => window.location.href = "/sessions/host"}>
+                            Host Session
+                          </Button>
+                          {match.linkedin_url && (
+                            <Button variant="outline" size="icon" asChild>
+                              <a href={match.linkedin_url} target="_blank" rel="noreferrer" title="LinkedIn">
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                          {match.etrigan_url && (
+                            <Button variant="outline" size="icon" asChild>
+                              <a href={match.etrigan_url} target="_blank" rel="noreferrer" title="Etrigan Profile">
+                                <FileText className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
                   {match.linkedin_url && (
                     <Button variant="outline" size="icon" asChild>
                       <a href={match.linkedin_url} target="_blank" rel="noreferrer">
