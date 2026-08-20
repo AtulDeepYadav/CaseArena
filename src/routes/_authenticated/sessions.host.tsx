@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon, Loader2, Users, Clock, Globe, Lock, Target } from "lucide-react";
+import { CalendarIcon, Loader2, Users, Clock, Globe, Lock, Target, Link2 } from "lucide-react";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ const sessionSchema = z.object({
   scheduled_time: z.date(),
   estimated_duration_mins: z.number().min(30).max(180),
   max_seats: z.number().min(2).max(10),
+  meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 type SessionFormValues = z.infer<typeof sessionSchema>;
@@ -65,6 +66,7 @@ function HostSessionPage() {
       visibility: "public",
       estimated_duration_mins: 60,
       max_seats: 4,
+      meeting_link: "",
     },
   });
 
@@ -83,6 +85,7 @@ function HostSessionPage() {
           scheduled_time: data.scheduled_time.toISOString(),
           estimated_duration_mins: data.estimated_duration_mins,
           max_seats: data.max_seats,
+          meeting_link: data.meeting_link || null,
           host_id: session.user.id,
           status: "published",
         })
@@ -150,47 +153,84 @@ function HostSessionPage() {
                 {...form.register("description")}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="meeting_link">Meeting Link (Optional)</Label>
+              <div className="relative">
+                <Link2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="meeting_link"
+                  placeholder="https://zoom.us/j/123..."
+                  className="pl-9"
+                  {...form.register("meeting_link")}
+                />
+              </div>
+              {form.formState.errors.meeting_link && (
+                <p className="text-sm text-destructive">{form.formState.errors.meeting_link.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
             {/* Scheduling */}
             <div className="space-y-2">
-              <Label>Scheduled Time</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !form.watch("scheduled_time") && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch("scheduled_time") ? (
-                      format(form.watch("scheduled_time"), "PPP p")
-                    ) : (
-                      <span>Pick a date & time</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={form.watch("scheduled_time")}
-                    onSelect={(date) => {
-                      if (date) {
-                        // Set time to something default like 18:00 if not set, or let user pick.
-                        // For simplicity, we just take the date here, but in production, we'd add a time picker.
-                        date.setHours(18, 0, 0, 0); 
-                        form.setValue("scheduled_time", date);
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label>Scheduled Date & Time</Label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full sm:w-[180px] justify-start text-left font-normal",
+                        !form.watch("scheduled_time") && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {form.watch("scheduled_time") ? (
+                        format(form.watch("scheduled_time"), "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={form.watch("scheduled_time")}
+                      onSelect={(date) => {
+                        if (date) {
+                          const existingDate = form.watch("scheduled_time");
+                          if (existingDate) {
+                            date.setHours(existingDate.getHours(), existingDate.getMinutes(), 0, 0);
+                          } else {
+                            date.setHours(18, 0, 0, 0);
+                          }
+                          form.setValue("scheduled_time", date);
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                <Input 
+                  type="time" 
+                  className="w-full sm:w-[130px]"
+                  value={form.watch("scheduled_time") ? format(form.watch("scheduled_time"), "HH:mm") : ""}
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    const [hours, minutes] = e.target.value.split(":");
+                    const newDate = form.watch("scheduled_time") ? new Date(form.watch("scheduled_time")) : new Date();
+                    newDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+                    form.setValue("scheduled_time", newDate);
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                <Globe className="h-3 w-3" /> Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+              </p>
               {form.formState.errors.scheduled_time && (
-                <p className="text-sm text-destructive">Please select a time.</p>
+                <p className="text-sm text-destructive">Please select a valid date and time.</p>
               )}
             </div>
 

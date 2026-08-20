@@ -12,6 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { ExternalLink, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/sessions/mine")({
   head: () => ({
@@ -24,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/sessions/mine")({
 });
 
 type MySession = {
+  meeting_link?: string;
   role: "host" | "interviewer" | "candidate" | "observer";
   session: {
     id: string;
@@ -43,6 +46,40 @@ type MySession = {
 
 function MySessionsPage() {
   const { session: authSession } = useAuth();
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  
+  const handleCancelSession = async (e: React.MouseEvent, sessionId: string) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to cancel this session?")) return;
+    setIsProcessing(sessionId);
+    try {
+      const { error } = await supabase.from('collab_sessions').update({ status: 'completed' }).eq('id', sessionId);
+      if (error) throw error;
+      setSessions(prev => prev.filter(s => s.session.id !== sessionId));
+      toast.success("Session cancelled.");
+    } catch (err) {
+      toast.error("Failed to cancel session");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const handleLeaveSession = async (e: React.MouseEvent, sessionId: string) => {
+    e.preventDefault();
+    if (!confirm("Are you sure you want to leave this session?")) return;
+    if (!authSession?.user.id) return;
+    setIsProcessing(sessionId);
+    try {
+      const { error } = await supabase.from('collab_participants').delete().eq('session_id', sessionId).eq('user_id', authSession.user.id);
+      if (error) throw error;
+      setSessions(prev => prev.filter(s => s.session.id !== sessionId));
+      toast.success("You left the session.");
+    } catch (err) {
+      toast.error("Failed to leave session");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
   const [sessions, setSessions] = useState<MySession[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +94,8 @@ function MySessionsPage() {
           session:collab_sessions!inner (
             id, title, difficulty, status, scheduled_time, estimated_duration_mins, max_seats,
             host:profiles!collab_sessions_host_id_fkey(full_name, avatar_url),
-            participants:collab_participants(count)
+            participants:collab_participants(count),
+            meeting_link
           )
         `)
         .eq("user_id", authSession.user.id)
@@ -137,17 +175,51 @@ function MySessionsPage() {
               <span className="text-sm font-medium">{s.host.full_name}</span>
             </div>
             
-            <Button asChild size="sm" variant={s.status === "live" ? "default" : "secondary"}>
-              <Link to={`/sessions/${s.id}`}>
-                {s.status === "completed" ? (
-                  <><CheckCircle2 className="mr-2 h-4 w-4" /> View Report</>
-                ) : s.status === "live" ? (
-                  <><Play className="mr-2 h-4 w-4" /> Enter Room</>
-                ) : (
-                  "View Details"
-                )}
-              </Link>
-            </Button>
+            <div className="flex gap-2 flex-wrap justify-end mt-4 sm:mt-0">
+              {s.meeting_link && s.status !== "completed" && (
+                <Button asChild size="sm" variant="outline" className="gap-1 text-blue-500 hover:text-blue-600 border-blue-500/20">
+                  <a href={s.meeting_link} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                    <ExternalLink className="h-4 w-4" /> Join Meet
+                  </a>
+                </Button>
+              )}
+              
+              {data.role === "host" && s.status !== "completed" && (
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-destructive hover:bg-destructive/10"
+                  disabled={isProcessing === s.id}
+                  onClick={(e) => handleCancelSession(e, s.id)}
+                >
+                  <X className="h-4 w-4 mr-1" /> Cancel
+                </Button>
+              )}
+              
+              {data.role !== "host" && s.status !== "completed" && (
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-destructive hover:bg-destructive/10"
+                  disabled={isProcessing === s.id}
+                  onClick={(e) => handleLeaveSession(e, s.id)}
+                >
+                  <X className="h-4 w-4 mr-1" /> Leave
+                </Button>
+              )}
+
+              <Button asChild size="sm" variant={s.status === "live" ? "default" : "secondary"}>
+                <Link to={`/sessions/${s.id}`}>
+                  {s.status === "completed" ? (
+                    <><CheckCircle2 className="mr-2 h-4 w-4" /> View Report</>
+                  ) : s.status === "live" ? (
+                    <><Play className="mr-2 h-4 w-4" /> Enter Room</>
+                  ) : (
+                    "View Details"
+                  )}
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </motion.div>

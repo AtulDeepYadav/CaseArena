@@ -402,6 +402,7 @@ CREATE TABLE public.collab_sessions (
   description text,
   host_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   case_id uuid, -- Reference to cases table if available
+  meeting_link text, -- Zoom/Meet link for the session
   status public.collab_session_status_t NOT NULL DEFAULT 'draft',
   visibility public.session_visibility_t NOT NULL DEFAULT 'public',
   difficulty public.difficulty_t NOT NULL DEFAULT 'medium',
