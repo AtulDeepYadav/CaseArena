@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -18,7 +17,10 @@ export const Route = createFileRoute("/auth")({
       { title: "Sign in — CaseArena" },
       { name: "description", content: "Sign in or create your CaseArena case prep account." },
       { property: "og:title", content: "Sign in — CaseArena" },
-      { property: "og:description", content: "Access your AI case trainer, repository and prep sessions." },
+      {
+        property: "og:description",
+        content: "Access your AI case trainer, repository and prep sessions.",
+      },
     ],
   }),
   component: AuthPage,
@@ -215,14 +217,19 @@ function AuthPage() {
 
               <Button type="submit" disabled={busy} className="w-full bg-gradient-primary">
                 {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {mode === "login" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
+                {mode === "login"
+                  ? "Sign in"
+                  : mode === "signup"
+                    ? "Create account"
+                    : "Send reset link"}
               </Button>
             </form>
 
             {mode !== "forgot" && (
               <>
                 <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+                  <span className="h-px flex-1 bg-border" /> or{" "}
+                  <span className="h-px flex-1 bg-border" />
                 </div>
                 <Button variant="outline" className="w-full" onClick={google} disabled={busy}>
                   Continue with Google

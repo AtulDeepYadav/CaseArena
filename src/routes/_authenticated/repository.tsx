@@ -9,6 +9,7 @@ import {
   FileText,
   Trash2,
   Download,
+  Eye,
   Globe2,
   Lock,
   Loader2,
@@ -35,34 +36,54 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PageHeader } from "@/components/page-header";
+import { FilePreviewDialog, type FilePreviewState } from "@/components/file-preview-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { isPdfFile } from "@/lib/file-preview";
 
 export const Route = createFileRoute("/_authenticated/repository")({
   head: () => ({
     meta: [
       { title: "Repository — CaseArena" },
-      { name: "description", content: "Organise your case notes, frameworks and interview transcripts." },
+      {
+        name: "description",
+        content: "Organise your case notes, frameworks and interview transcripts.",
+      },
       { property: "og:title", content: "Repository — CaseArena" },
-      { property: "og:description", content: "Private folders, uploads and shareable case material." },
+      {
+        property: "og:description",
+        content: "Private folders, uploads and shareable case material.",
+      },
     ],
   }),
   component: RepositoryPage,
 });
 
-const categories = ["Consulting", "Product Management", "Marketing", "Operations", "Finance", "General Business"];
+const categories = [
+  "Consulting",
+  "Product Management",
+  "Marketing",
+  "Operations",
+  "Finance",
+  "General Business",
+];
 
 function RepositoryPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [preview, setPreview] = useState<FilePreviewState>(null);
 
   const { data: folders = [] } = useQuery({
     queryKey: ["folders", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.from("folders").select("*").eq("user_id", user!.id).order("name");
+      const { data } = await supabase
+        .from("folders")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("name");
       return data ?? [];
     },
   });
@@ -90,7 +111,9 @@ function RepositoryPage() {
   const createFolder = async () => {
     const name = window.prompt("Folder name");
     if (!name?.trim()) return;
-    const { error } = await supabase.from("folders").insert({ user_id: user!.id, name: name.trim().slice(0, 80) });
+    const { error } = await supabase
+      .from("folders")
+      .insert({ user_id: user!.id, name: name.trim().slice(0, 80) });
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["folders"] });
   };
@@ -118,12 +141,32 @@ function RepositoryPage() {
     window.open(data.signedUrl, "_blank", "noopener");
   };
 
+  const viewFile = async (path: string | null, name: string | null, type: string | null) => {
+    if (!path) return toast.error("No file attached");
+    const title = name ?? "File";
+    const isPdf = isPdfFile(type, name);
+    setPreview({ title, url: null, isPdf });
+    if (!isPdf) return;
+    const { data, error } = await supabase.storage.from("repository").createSignedUrl(path, 60);
+    if (error || !data) {
+      toast.error(error?.message ?? "Could not open preview");
+      setPreview(null);
+      return;
+    }
+    setPreview({ title, url: data.signedUrl, isPdf: true });
+  };
+
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Personal Repository"
         description="Your private library of notes, frameworks and transcripts."
-        action={<UploadDialog folders={folders} onDone={() => qc.invalidateQueries({ queryKey: ["my-files"] })} />}
+        action={
+          <UploadDialog
+            folders={folders}
+            onDone={() => qc.invalidateQueries({ queryKey: ["my-files"] })}
+          />
+        }
       />
 
       <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
@@ -184,7 +227,9 @@ function RepositoryPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-semibold">{f.title}</h3>
-                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{f.description}</p>
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {f.description}
+                      </p>
                     </div>
                     <Badge variant={f.visibility === "public" ? "default" : "secondary"}>
                       {f.visibility}
@@ -198,14 +243,33 @@ function RepositoryPage() {
                     ))}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => download(f.storage_path, f.file_name)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => viewFile(f.storage_path, f.file_name, f.file_type)}
+                    >
+                      <Eye className="mr-1 h-4 w-4" /> View
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => download(f.storage_path, f.file_name)}
+                    >
                       <Download className="mr-1 h-4 w-4" /> Download
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleVisibility(f.id, f.visibility)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleVisibility(f.id, f.visibility)}
+                    >
                       {f.visibility === "public" ? (
-                        <><Lock className="mr-1 h-4 w-4" /> Make private</>
+                        <>
+                          <Lock className="mr-1 h-4 w-4" /> Make private
+                        </>
                       ) : (
-                        <><Globe2 className="mr-1 h-4 w-4" /> Share</>
+                        <>
+                          <Globe2 className="mr-1 h-4 w-4" /> Share
+                        </>
                       )}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => remove(f.id)}>
@@ -218,6 +282,8 @@ function RepositoryPage() {
           )}
         </section>
       </div>
+
+      <FilePreviewDialog preview={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }
@@ -257,7 +323,11 @@ function UploadDialog({
         title: title.trim().slice(0, 200),
         description: description.trim().slice(0, 2000) || null,
         category,
-        tags: tags.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 10),
+        tags: tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .slice(0, 10),
         folder_id: folderId === "none" ? null : folderId,
         visibility: visibility as "public" | "private",
         storage_path,
@@ -303,32 +373,50 @@ function UploadDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Description</Label>
-            <Textarea value={description} maxLength={2000} onChange={(e) => setDescription(e.target.value)} />
+            <Textarea
+              value={description}
+              maxLength={2000}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Category</Label>
               <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Folder</Label>
               <Select value={folderId} onValueChange={setFolderId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No folder</SelectItem>
-                  {folders.map((f) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                  {folders.map((f) => (
+                    <SelectItem key={f.id} value={f.id}>
+                      {f.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Visibility</Label>
               <Select value={visibility} onValueChange={setVisibility}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="private">Private</SelectItem>
                   <SelectItem value="public">Public (community)</SelectItem>

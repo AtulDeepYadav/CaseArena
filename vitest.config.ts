@@ -22,6 +22,8 @@ export default defineConfig({
         "src/lib/errors.ts",
         "src/lib/profile.ts",
         "src/lib/user-settings.ts",
+        "src/lib/file-preview.ts",
+        "src/components/file-preview-dialog.tsx",
         "src/routes/_authenticated/bookmarks.tsx",
         "src/routes/_authenticated/profile.tsx",
         "src/routes/_authenticated/settings.tsx",

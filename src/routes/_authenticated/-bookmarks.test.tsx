@@ -61,6 +61,7 @@ const FILE_A = {
   tags: ["excel", "framework"],
   storage_path: "user-1/file-a.pdf",
   file_name: "case.pdf",
+  file_type: "application/pdf",
 };
 
 const FILE_B = {
@@ -71,6 +72,15 @@ const FILE_B = {
   tags: null,
   storage_path: null,
   file_name: null,
+  file_type: null,
+};
+
+const FILE_DOCX = {
+  ...FILE_A,
+  id: "file-docx",
+  title: "Interview Notes",
+  file_name: "notes.docx",
+  file_type: "application/msword",
 };
 
 const ATTEMPT = { id: "attempt-a", case_title: "Market entry drill", category: "Consulting" };
@@ -135,6 +145,133 @@ describe("BookmarksPage", () => {
         "noopener",
       ),
     );
+  });
+
+  it("views a PDF file inline", async () => {
+    supabaseMock.from.mockImplementation((table: string) => {
+      if (table === "bookmarks")
+        return makeQueryBuilder(
+          mockBookmarks([
+            { id: "bm-1", created_at: "2026-01-01", file_id: "file-a", attempt_id: null },
+          ]),
+        );
+      if (table === "files") return makeQueryBuilder({ data: [FILE_A], error: null });
+      return makeQueryBuilder({ data: [], error: null });
+    });
+    const createSignedUrl = vi.fn(async () => ({
+      data: { signedUrl: "https://signed.example/case.pdf" },
+      error: null,
+    }));
+    supabaseMock.storage.from.mockReturnValue({ createSignedUrl });
+
+    renderWithQueryClient(<BookmarksPage />);
+    await userEvent.click(await screen.findByRole("button", { name: /^view$/i }));
+    expect(createSignedUrl).toHaveBeenCalledWith("user-1/file-a.pdf", 60);
+    const iframe = await screen.findByTitle("case.pdf");
+    expect(iframe).toHaveAttribute("src", "https://signed.example/case.pdf");
+
+    await userEvent.click(screen.getByRole("button", { name: /close/i }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows a fallback in the dialog for a non-PDF file", async () => {
+    supabaseMock.from.mockImplementation((table: string) => {
+      if (table === "bookmarks")
+        return makeQueryBuilder(
+          mockBookmarks([
+            { id: "bm-7", created_at: "2026-01-01", file_id: "file-docx", attempt_id: null },
+          ]),
+        );
+      if (table === "files") return makeQueryBuilder({ data: [FILE_DOCX], error: null });
+      return makeQueryBuilder({ data: [], error: null });
+    });
+    const createSignedUrl = vi.fn();
+    supabaseMock.storage.from.mockReturnValue({ createSignedUrl });
+
+    renderWithQueryClient(<BookmarksPage />);
+    await userEvent.click(await screen.findByRole("button", { name: /^view$/i }));
+    expect(await screen.findByText(/only available for pdf files/i)).toBeInTheDocument();
+    expect(createSignedUrl).not.toHaveBeenCalled();
+  });
+
+  it("warns when viewing a file with no attachment", async () => {
+    supabaseMock.from.mockImplementation((table: string) => {
+      if (table === "bookmarks")
+        return makeQueryBuilder(
+          mockBookmarks([
+            { id: "bm-2", created_at: "2026-01-01", file_id: "file-b", attempt_id: null },
+          ]),
+        );
+      if (table === "files") return makeQueryBuilder({ data: [FILE_B], error: null });
+      return makeQueryBuilder({ data: [], error: null });
+    });
+
+    renderWithQueryClient(<BookmarksPage />);
+    await userEvent.click(await screen.findByRole("button", { name: /^view$/i }));
+    expect(toastError).toHaveBeenCalledWith("No file attached");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows an error and closes the preview when the signed url request fails while viewing", async () => {
+    supabaseMock.from.mockImplementation((table: string) => {
+      if (table === "bookmarks")
+        return makeQueryBuilder(
+          mockBookmarks([
+            { id: "bm-1", created_at: "2026-01-01", file_id: "file-a", attempt_id: null },
+          ]),
+        );
+      if (table === "files") return makeQueryBuilder({ data: [FILE_A], error: null });
+      return makeQueryBuilder({ data: [], error: null });
+    });
+    const createSignedUrl = vi.fn(async () => ({ data: null, error: { message: "expired token" } }));
+    supabaseMock.storage.from.mockReturnValue({ createSignedUrl });
+
+    renderWithQueryClient(<BookmarksPage />);
+    await userEvent.click(await screen.findByRole("button", { name: /^view$/i }));
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("expired token"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("falls back to a generic message when the preview request returns nothing", async () => {
+    supabaseMock.from.mockImplementation((table: string) => {
+      if (table === "bookmarks")
+        return makeQueryBuilder(
+          mockBookmarks([
+            { id: "bm-1", created_at: "2026-01-01", file_id: "file-a", attempt_id: null },
+          ]),
+        );
+      if (table === "files") return makeQueryBuilder({ data: [FILE_A], error: null });
+      return makeQueryBuilder({ data: [], error: null });
+    });
+    const createSignedUrl = vi.fn(async () => ({ data: null, error: null }));
+    supabaseMock.storage.from.mockReturnValue({ createSignedUrl });
+
+    renderWithQueryClient(<BookmarksPage />);
+    await userEvent.click(await screen.findByRole("button", { name: /^view$/i }));
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Could not open preview"));
+  });
+
+  it("views a PDF file that has no stored file name", async () => {
+    const fileWithoutName = { ...FILE_A, id: "file-e", file_name: null };
+    supabaseMock.from.mockImplementation((table: string) => {
+      if (table === "bookmarks")
+        return makeQueryBuilder(
+          mockBookmarks([
+            { id: "bm-8", created_at: "2026-01-01", file_id: "file-e", attempt_id: null },
+          ]),
+        );
+      if (table === "files") return makeQueryBuilder({ data: [fileWithoutName], error: null });
+      return makeQueryBuilder({ data: [], error: null });
+    });
+    const createSignedUrl = vi.fn(async () => ({
+      data: { signedUrl: "https://signed.example/x" },
+      error: null,
+    }));
+    supabaseMock.storage.from.mockReturnValue({ createSignedUrl });
+
+    renderWithQueryClient(<BookmarksPage />);
+    await userEvent.click(await screen.findByRole("button", { name: /^view$/i }));
+    expect(await screen.findByTitle("File")).toBeInTheDocument();
   });
 
   it("removes a file bookmark", async () => {
