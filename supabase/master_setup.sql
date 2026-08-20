@@ -28,6 +28,10 @@ CREATE TABLE public.profiles (
   streak integer NOT NULL DEFAULT 0,
   last_active_date date,
   is_banned boolean NOT NULL DEFAULT false,
+  onboarding_completed boolean DEFAULT false,
+  active_time text,
+  etrigan_url text,
+  onboarding_answers jsonb,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
