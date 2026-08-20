@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Users, ExternalLink, GraduationCap, Briefcase, MapPin } from "lucide-react";
+import { Users, ExternalLink, GraduationCap, Briefcase, MapPin, Clock } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -113,7 +113,8 @@ function MatchmakerPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">No perfect matches yet</h3>
             <p className="text-muted-foreground max-w-md">
-              We couldn't find any {myProfile?.batch === "PGP 1" ? "PGP 2" : "PGP 1"} peers with a >70% profile match right now. Check back as more students complete their onboarding!
+              We couldn't find any {myProfile?.batch === "PGP 1" ? "PGP 2" : "PGP 1"} peers with a{" "}
+              {">"}70% profile match right now. Check back as more students complete their onboarding!
             </p>
           </div>
         ) : (

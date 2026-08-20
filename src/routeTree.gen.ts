@@ -19,6 +19,8 @@ import { Route as AuthenticatedCommunityRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedPeersRouteImport } from './routes/_authenticated/peers'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedRepositoryRouteImport } from './routes/_authenticated/repository'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -80,6 +82,16 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPeersRoute = AuthenticatedPeersRouteImport.update({
+  id: '/peers',
+  path: '/peers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -142,6 +154,8 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/peers': typeof AuthenticatedPeersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/repository': typeof AuthenticatedRepositoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -162,6 +176,8 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/peers': typeof AuthenticatedPeersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/repository': typeof AuthenticatedRepositoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -184,6 +200,8 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/peers': typeof AuthenticatedPeersRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/repository': typeof AuthenticatedRepositoryRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -206,6 +224,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/leaderboard'
     | '/notifications'
+    | '/onboarding'
+    | '/peers'
     | '/profile'
     | '/repository'
     | '/settings'
@@ -226,6 +246,8 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/leaderboard'
     | '/notifications'
+    | '/onboarding'
+    | '/peers'
     | '/profile'
     | '/repository'
     | '/settings'
@@ -247,6 +269,8 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/leaderboard'
     | '/_authenticated/notifications'
+    | '/_authenticated/onboarding'
+    | '/_authenticated/peers'
     | '/_authenticated/profile'
     | '/_authenticated/repository'
     | '/_authenticated/settings'
@@ -337,6 +361,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/peers': {
+      id: '/_authenticated/peers'
+      path: '/peers'
+      fullPath: '/peers'
+      preLoaderRoute: typeof AuthenticatedPeersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -410,6 +448,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPeersRoute: typeof AuthenticatedPeersRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRepositoryRoute: typeof AuthenticatedRepositoryRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -428,6 +468,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPeersRoute: AuthenticatedPeersRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRepositoryRoute: AuthenticatedRepositoryRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

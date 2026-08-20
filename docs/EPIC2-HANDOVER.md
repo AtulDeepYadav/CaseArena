@@ -5,7 +5,7 @@ built on TanStack Start + Supabase + shadcn/ui, originally scaffolded via Lovabl
 This document is the single reference for anyone picking up this work: what's
 shipped, what's left, and what needs a human with dashboard access to finish.
 
-Last updated: 2026-08-19.
+Last updated: 2026-08-20.
 
 ## 1. Scope
 
@@ -27,6 +27,7 @@ during testing.
 | [#6](https://github.com/AtulDeepYadav/CaseArena/pull/6) | Consolidated, idempotent one-shot SQL script for production (`supabase/manual-fix-run-in-sql-editor.sql`). |
 | [#7](https://github.com/AtulDeepYadav/CaseArena/pull/7) | Like/rating/comment counts now computed **live** from `file_likes`/`file_ratings`/`file_comments` (all have permissive RLS) instead of the trigger-dependent stored columns — works immediately regardless of whether the pending migration has been run. |
 | *(direct push, no PR)* | Personal Supabase project + DB toggle — see §4. |
+| *(direct push, no PR)* | This handover doc, plus two unrelated one-line fixes hit while rebasing onto the owner's new commits: a build-breaking unescaped `>` in JSX text and a missing `Clock` icon import, both in the owner's new `peers.tsx` — not Epic 2 files, fixed only because they broke `npm run build` for everyone on `main`. |
 
 > Note: the repo was renamed `AtulDeepYadav/EPIC-03---Bits-n-Bytes` →
 > `AtulDeepYadav/CaseArena` early on, before any of the above PRs were opened.
@@ -49,23 +50,37 @@ during testing.
 
 ## 4. Database — **read this before touching anything DB-related**
 
-There are now **two** Supabase projects in play:
+The repo owner (`atuldeepyadav`) turned out to be reachable/active after
+all — while this personal-DB toggle work was in flight, they pushed 6 new
+commits directly, including switching the live app to a **third** Supabase
+project and shipping new features (onboarding flow, peer matchmaker). As a
+result there are now **three** Supabase projects that have been in play at
+one point or another:
 
-1. **Original shared project** (`bbfhftgwjmvltrnabjvw`) — what the live
-   production app has always used. Owner is unreachable (this is why #2
-   below exists). `.env`'s `SUPABASE_*` vars point here.
+1. **Original shared project** (`bbfhftgwjmvltrnabjvw`) — what the live app
+   used at the start of this work. No longer what `.env` points to.
 2. **Personal project** (`fnfnadbwottfhkgpxvwp`, name `casearena-personal`) —
-   created because the original owner couldn't be reached to run pending
-   migrations. Full schema applied and verified (all tables, RLS, triggers,
+   created mid-session as a fallback while the owner was believed
+   unreachable. Full schema applied and verified (all tables, RLS, triggers,
    both storage buckets, seed badges — covers all 3 epics, not just this
-   one). `.env`'s `PERSONAL_SUPABASE_*` vars point here.
+   one). Still there, still fully working, just not the live default.
+   `.env`'s `PERSONAL_SUPABASE_*` vars point here.
+3. **Current live project** (`xipzdsdjukqovrzitwtm`) — what the owner
+   switched the app to in their own commits. `.env`'s `SUPABASE_*` vars now
+   point here. **Its Epic 2 schema status (the `manual-fix-run-in-sql-editor.sql`
+   fixes — `user_settings` table, `avatars` bucket, bookmarks unique
+   constraint, comment/like/rating sync) is unverified** — nobody on this
+   side has dashboard access to it, so treat avatar upload, Settings, and
+   bookmark dedup as "unknown, may be broken" on this project until someone
+   with access confirms or runs the script.
 
 **Toggle**: `USE_PERSONAL_SUPABASE` / `VITE_USE_PERSONAL_SUPABASE` in `.env`,
-currently `"false"` (using the original shared project — unchanged behavior).
-Set both to `"true"` and **fully restart** the dev server (or redeploy, for
-the live app) to switch. This is a build-time flag, not a live switch —
-Vite's own `.env`-change auto-restart did not reliably pick up the new value
-in testing; kill and rerun `npm run dev` if flipping it locally.
+currently `"false"` (using project #3 above, whatever `SUPABASE_*` points
+to). Set both to `"true"` and **fully restart** the dev server (or redeploy,
+for the live app) to switch to the personal project (#2). This is a
+build-time flag, not a live switch — Vite's own `.env`-change auto-restart
+did not reliably pick up the new value in testing; kill and rerun
+`npm run dev` if flipping it locally.
 
 The toggle is wired into every place that resolves Supabase credentials:
 `src/integrations/supabase/client.ts` (browser client), `client.server.ts`
@@ -74,15 +89,15 @@ The toggle is wired into every place that resolves Supabase credentials:
 personal project's own Settings → API page if something starts needing it),
 and `auth-middleware.ts` (also currently unused).
 
-**Pending migration on the original project** — still not confirmed applied.
-If/when the original owner resurfaces, run
-`supabase/manual-fix-run-in-sql-editor.sql` in their Supabase Dashboard → SQL
-Editor. It's idempotent (safe to run regardless of what's already applied)
+**Pending migration on the live project (#3)** — status unknown, see above.
+Whoever has dashboard access to `xipzdsdjukqovrzitwtm` should run
+`supabase/manual-fix-run-in-sql-editor.sql` there (Supabase Dashboard → SQL
+Editor). It's idempotent (safe to run regardless of what's already applied)
 and fixes: avatar upload ("bucket not found"), the Settings page (missing
 `user_settings` table), duplicate bookmarks, and why like/rating/comment
 counts don't update on Community Repository cards (as of PR #7, the counts
-work live regardless — this migration is now mainly needed for the "Most
-liked"/"Top rated" **sort** options, which still order by the old
+work live regardless of this migration — it's now mainly needed for the
+"Most liked"/"Top rated" **sort** options, which still order by the old
 trigger-dependent stored columns).
 
 ## 5. Things that need a human with dashboard access (I can't do these from code)
@@ -92,7 +107,7 @@ trigger-dependent stored columns).
 | Google OAuth Client ID/Secret | Supabase Dashboard → Auth → Providers → Google | `{"msg":"Unsupported provider: missing OAuth secret"}` on "Continue with Google" |
 | Auth Site URL / Redirect URLs | Supabase Dashboard → Auth → URL Configuration | Password reset emails redirect to a stale Lovable preview domain instead of this app |
 | `workflow` OAuth scope on `gh` | Run `gh auth refresh -h github.com -s workflow` | `.github/workflows/ci.yml` (sitting locally, untracked — see below) can't be pushed; every push has been getting rejected on just that one file |
-| Run `manual-fix-run-in-sql-editor.sql` on the **original** project | Supabase Dashboard → SQL Editor | Avatar upload, Settings page, and sort-by-likes/rating stay broken on the original DB (all fixed already on the personal one) |
+| Run `manual-fix-run-in-sql-editor.sql` on the **live** project (`xipzdsdjukqovrzitwtm`) | Supabase Dashboard → SQL Editor | Avatar upload, Settings page, and sort-by-likes/rating may be broken on the live DB — unverified, see §4 (all fixed already on the personal project) |
 
 Full setup steps for the first two are in `docs/supabase-auth-config.md`.
 
