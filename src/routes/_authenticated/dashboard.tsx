@@ -107,50 +107,51 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl pb-16 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="mx-auto max-w-6xl h-[calc(100vh-6rem)] flex flex-col space-y-6 pb-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
         <PageHeader
           title="Learning Arena"
           description="Track your progress, complete quests, and climb the ranks."
         />
-        <div className="flex items-center gap-4 bg-background border p-2 rounded-xl">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 text-orange-600 rounded-lg font-bold">
-            <Flame className="h-5 w-5" />
+        <div className="flex items-center gap-4 bg-background/50 border p-1.5 rounded-xl shadow-sm backdrop-blur-sm">
+          <div className="flex items-center gap-2 px-3 py-1 bg-orange-500/10 text-orange-600 rounded-lg font-bold text-sm">
+            <Flame className="h-4 w-4" />
             <span>12 Day Streak!</span>
           </div>
         </div>
       </div>
 
       {/* Top Section: XP & Rank */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass rounded-2xl p-8 flex flex-col justify-center">
-          <div className="flex justify-between items-end mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 shrink-0">
+        <div className="lg:col-span-2 glass rounded-2xl p-6 flex flex-col justify-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-50" />
+          <div className="relative z-10 flex justify-between items-end mb-4">
             <div>
-              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                Current Rank
+              <div className="text-xs font-bold text-primary uppercase tracking-widest mb-1 flex items-center gap-1">
+                <Target className="h-3 w-3" /> Current Rank
               </div>
-              <h2 className="text-3xl font-black">{currentRank}</h2>
+              <h2 className="text-3xl font-black tracking-tight">{currentRank}</h2>
             </div>
             <div className="text-right">
-              <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                Next Rank: {nextRank}
+              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Next: {nextRank}
               </div>
-              <div className="text-xl font-bold">
-                {userXP} <span className="text-muted-foreground text-sm">/ {nextRankXP} XP</span>
+              <div className="text-xl font-bold text-foreground">
+                {userXP} <span className="text-muted-foreground text-sm font-medium">/ {nextRankXP} XP</span>
               </div>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="h-4 w-full bg-muted rounded-full overflow-hidden">
+          <div className="h-3 w-full bg-muted/50 rounded-full overflow-hidden relative z-10 backdrop-blur-sm border shadow-inner">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="h-full bg-primary"
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-primary/80 to-primary"
             />
           </div>
-          <p className="text-sm text-muted-foreground mt-4 text-center">
+          <p className="text-xs text-muted-foreground mt-3 text-center relative z-10">
             {rank
               ? `You're ranked #${rank.position} of ${rank.total} candidates. Keep pushing!`
               : "Keep pushing!"}
@@ -158,17 +159,17 @@ function DashboardPage() {
         </div>
 
         {/* Leaderboard Snippet */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="font-bold flex items-center gap-2 mb-6">
-            <Trophy className="h-5 w-5 text-yellow-500" /> Cohort Leaderboard
+        <div className="glass rounded-2xl p-5 flex flex-col h-[180px]">
+          <h3 className="font-bold flex items-center gap-2 mb-3 text-sm tracking-wide">
+            <Trophy className="h-4 w-4 text-yellow-500" /> Cohort Top 3
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-2 flex-1">
             {leaderboardLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 rounded-xl" />
+                <Skeleton key={i} className="h-10 rounded-lg" />
               ))
             ) : topProfiles.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No one on the leaderboard yet.</p>
+              <p className="text-xs text-muted-foreground text-center pt-4">No one on the leaderboard yet.</p>
             ) : (
               topProfiles.map((p, idx) => {
                 const isYou = p.id === user?.id;
@@ -177,25 +178,25 @@ function DashboardPage() {
                   <div
                     key={p.id}
                     className={cn(
-                      "flex items-center justify-between p-3 rounded-xl border",
-                      isYou ? "border-primary bg-primary/5" : "bg-background",
+                      "flex items-center justify-between p-2 rounded-lg border text-sm transition-all hover:bg-muted/50",
+                      isYou ? "border-primary bg-primary/5" : "bg-background/40",
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="font-bold text-muted-foreground w-4">{idx + 1}</div>
-                      <Avatar className="h-8 w-8">
+                    <div className="flex items-center gap-2">
+                      <div className="font-bold text-muted-foreground/70 w-3 text-xs">{idx + 1}</div>
+                      <Avatar className="h-6 w-6">
                         <AvatarImage src={p.avatar_url ?? undefined} alt="" />
-                        <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback className="text-[10px]">{name.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium text-sm">{name}</span>
+                      <span className="font-medium truncate max-w-[100px]">{name}</span>
                     </div>
-                    <Badge variant="secondary">{p.xp} XP</Badge>
+                    <Badge variant="secondary" className="text-[10px] px-1.5">{p.xp} XP</Badge>
                   </div>
                 );
               })
             )}
           </div>
-          <Button variant="ghost" className="w-full mt-4 text-xs" asChild>
+          <Button variant="ghost" className="w-full mt-2 text-[10px] h-6 text-muted-foreground hover:text-foreground" asChild>
             <Link to="/leaderboard">
               View Full Rankings <ChevronRight className="h-3 w-3 ml-1" />
             </Link>
@@ -204,11 +205,11 @@ function DashboardPage() {
       </div>
 
       {/* Quest Modules */}
-      <div>
-        <h3 className="text-2xl font-black mb-6 flex items-center gap-2">
-          <Target className="h-6 w-6" /> Learning Quests
+      <div className="flex-1 flex flex-col min-h-0">
+        <h3 className="text-xl font-black mb-4 flex items-center gap-2 shrink-0">
+          <Target className="h-5 w-5 text-primary" /> Learning Quests
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
           {quests.map((quest, idx) => (
             <motion.div
               key={quest.id}
@@ -216,38 +217,38 @@ function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
               className={cn(
-                "relative flex flex-col rounded-2xl border p-6 hover-lift",
-                quest.status === "locked" ? "bg-muted/30 opacity-70" : "glass",
+                "relative flex flex-col rounded-xl border p-5 hover-lift transition-all",
+                quest.status === "locked" ? "bg-muted/20 opacity-60 grayscale-[0.5]" : "glass shadow-sm hover:shadow-md",
               )}
             >
               {quest.status === "completed" && (
-                <div className="absolute top-4 right-4 text-green-500">
-                  <CheckCircle2 className="h-6 w-6" />
+                <div className="absolute top-3 right-3 text-green-500 bg-green-500/10 p-1 rounded-full">
+                  <CheckCircle2 className="h-4 w-4" />
                 </div>
               )}
               {quest.status === "locked" && (
-                <div className="absolute top-4 right-4 text-muted-foreground">
-                  <Lock className="h-5 w-5" />
+                <div className="absolute top-3 right-3 text-muted-foreground bg-muted p-1 rounded-full">
+                  <Lock className="h-4 w-4" />
                 </div>
               )}
 
-              <div className="mb-4">
-                <Badge variant={quest.status === "active" ? "default" : "secondary"}>
+              <div className="mb-3">
+                <Badge variant={quest.status === "active" ? "default" : "secondary"} className="text-[10px] px-2 py-0.5 shadow-sm">
                   {quest.xp} XP
                 </Badge>
               </div>
 
-              <h4 className="font-bold text-lg mb-2">{quest.title}</h4>
-              <p className="text-sm text-muted-foreground mb-6 flex-1">{quest.desc}</p>
+              <h4 className="font-bold text-base mb-1.5 leading-tight">{quest.title}</h4>
+              <p className="text-xs text-muted-foreground mb-4 flex-1 line-clamp-3">{quest.desc}</p>
 
               <Button
                 variant={quest.status === "active" ? "default" : "outline"}
                 disabled={quest.status === "locked"}
-                className="w-full"
+                className={cn("w-full h-8 text-xs", quest.status === "active" && "shadow-md")}
                 asChild={quest.status !== "locked"}
               >
                 {quest.status === "locked" ? (
-                  <span>Locked</span>
+                  <span className="flex items-center justify-center gap-1.5"><Lock className="h-3 w-3" /> Locked</span>
                 ) : (
                   <Link to={`/trainer`}>
                     {quest.status === "completed" ? "Review" : "Start Quest"}
