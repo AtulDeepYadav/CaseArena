@@ -210,16 +210,16 @@ function MatchmakerPage() {
                         </div>
 
                         <div className="w-full mt-4 flex gap-2">
-                          <Button className="flex-1" variant="default" onClick={() => window.location.href = "/sessions/host"}>
-                            Host Session
-                          </Button>
-                          {match.linkedin_url && (
-                            <Button variant="outline" size="icon" asChild>
-                              <a href={match.linkedin_url} target="_blank" rel="noreferrer" title="LinkedIn">
-                                <ExternalLink className="h-4 w-4" />
+                          <Button className="flex-1" variant="default" asChild disabled={!match.linkedin_url}>
+                            {match.linkedin_url ? (
+                              <a href={match.linkedin_url} target="_blank" rel="noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                Connect on LinkedIn
                               </a>
-                            </Button>
-                          )}
+                            ) : (
+                              <span>No LinkedIn Provided</span>
+                            )}
+                          </Button>
                           {match.etrigan_url && (
                             <Button variant="outline" size="icon" asChild>
                               <a href={match.etrigan_url} target="_blank" rel="noreferrer" title="Etrigan Profile">
