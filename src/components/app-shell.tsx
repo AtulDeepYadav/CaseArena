@@ -8,6 +8,7 @@ import {
   CalendarPlus,
   CalendarSearch,
   CalendarCheck,
+  Users,
   Bookmark,
   Bell,
   User,
@@ -48,6 +49,7 @@ const sessionNav = [
   { title: "Host Session", url: "/sessions/host", icon: CalendarPlus },
   { title: "Join Session", url: "/sessions", icon: CalendarSearch },
   { title: "My Sessions", url: "/sessions/mine", icon: CalendarCheck },
+  { title: "Find Peers", url: "/peers", icon: Users },
 ];
 
 const personalNav = [
