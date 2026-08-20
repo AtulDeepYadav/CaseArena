@@ -28,6 +28,7 @@ type SessionWithHost = {
   scheduled_time: string;
   estimated_duration_mins: number;
   max_seats: number;
+  meeting_link?: string;
   host: {
     full_name: string;
     avatar_url: string;
@@ -45,7 +46,7 @@ function SessionsDiscoveryPage() {
       const { data, error } = await supabase
         .from("collab_sessions")
         .select(`
-          id, title, difficulty, scheduled_time, estimated_duration_mins, max_seats,
+          id, title, difficulty, scheduled_time, estimated_duration_mins, max_seats, meeting_link,
           host:profiles!collab_sessions_host_id_fkey(full_name, avatar_url),
           participants:collab_participants(count)
         `)
@@ -129,7 +130,12 @@ function SessionsDiscoveryPage() {
                 transition={{ delay: idx * 0.05 }}
                 key={session.id}
               >
-                <Link to={`/sessions/${session.id}`} className="block h-full group">
+                <a 
+                  href={session.meeting_link || "#"} 
+                  target={session.meeting_link ? "_blank" : "_self"}
+                  rel="noreferrer"
+                  className="block h-full group"
+                >
                   <div className="flex h-full flex-col justify-between rounded-2xl glass p-6 transition-all hover:ring-1 hover:ring-primary/50 hover:shadow-lg hover:shadow-primary/5">
                     
                     <div>
@@ -168,9 +174,9 @@ function SessionsDiscoveryPage() {
                         <span className="text-sm font-medium">{session.host.full_name}</span>
                       </div>
                     </div>
-                    
-                  </div>
-                </Link>
+                    </div>
+                  
+                </a>
               </motion.div>
             );
           })}

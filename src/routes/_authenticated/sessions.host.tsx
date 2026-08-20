@@ -47,7 +47,7 @@ const sessionSchema = z.object({
   scheduled_time: z.date(),
   estimated_duration_mins: z.number().min(30).max(180),
   max_seats: z.number().min(2).max(10),
-  meeting_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  meeting_link: z.string().url("Must be a valid meeting URL"),
 });
 
 type SessionFormValues = z.infer<typeof sessionSchema>;
@@ -155,7 +155,7 @@ function HostSessionPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="meeting_link">Meeting Link (Optional)</Label>
+              <Label htmlFor="meeting_link">Meeting Link (Required)</Label>
               <div className="relative">
                 <Link2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
